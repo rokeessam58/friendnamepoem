@@ -139,12 +139,15 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
   font-family: var(--f-big); font-weight: 700; font-size: calc(var(--h) * .74); line-height: 1; color: #fff;
   border: 3px solid var(--line); border-radius: 20px; box-shadow: 4px 4px 0 var(--line); -webkit-text-stroke: 1.5px var(--line);
   paint-order: stroke fill;
+  padding-top: calc(var(--h) * .14); /* 폰트 자체가 위로 치우쳐 있어 시각 중앙으로 보정 */
+  box-sizing: border-box;
 }
 .char.c0 { background: var(--coral); } .char.c1 { background: var(--mint); } .char.c2 { background: var(--sky); }
 .char.c3 { background: var(--yellow); } .char.c4 { background: var(--pink); }
 .poem-input { height: var(--h); font-size: 22px; border-radius: 18px; font-family: var(--f-title); font-weight: 700; }
 .save-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
 .save-info { font-size: 14px; flex: 1; min-width: 160px; }
+.save-info:empty { display: none; }
 @media (max-width: 480px) {
   .poem-board { --h: 58px; gap: 10px; padding: 14px 10px; }
   .poem-input { font-size: 17px; padding: 8px 10px; }

@@ -158,7 +158,7 @@
         var r = await Api.call('getPoem', { id: user.id, name: user.name });
         manito = r.manitoName;
         buildBoard(Array.from(manito), r.lines);
-        $('save-info').textContent = r.savedAt ? '마지막 저장: ' + r.savedAt : '글자 옆 칸을 마음껏 고쳐 쓰세요.';
+        $('save-info').textContent = r.savedAt ? '마지막 저장: ' + r.savedAt : '';
         show('s-poem');
       });
     } catch (err) {
