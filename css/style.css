@@ -1,8 +1,9 @@
 /* 눈누 웹폰트 (cdn.jsdelivr.net/gh/projectnoonnu) */
-@font-face { font-family: 'BMJUA'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMJUA.woff') format('woff'); font-weight: normal; font-display: swap; }
-@font-face { font-family: 'Cafe24Ssurround'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/Cafe24Ssurround.woff') format('woff'); font-weight: normal; font-display: swap; }
-@font-face { font-family: 'GmarketSans'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff'); font-weight: 400; font-display: swap; }
-@font-face { font-family: 'GmarketSans'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'BusanDandiGothic'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/2610132210@l/l/부산단디고딕L.woff2') format('woff2'); font-weight: 300; font-display: swap; }
+@font-face { font-family: 'BusanDandiGothic'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/2610132210@l/l/부산단디고딕M.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'BusanDandiGothic'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/2610132210@l/l/부산단디고딕B.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'KerisKedyuche'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-3@1.0/KERISKEDU_R.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'KerisKedyuche'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-3@1.0/KERISKEDU_B.woff2') format('woff2'); font-weight: 700; font-display: swap; }
 
 :root {
   --bg: #fff6e3;
@@ -15,14 +16,15 @@
   --pink: #ffb5c8;
   --card: #ffffff;
   --line: #3b2f2f;
-  --f-title: 'BMJUA', 'GmarketSans', sans-serif;
-  --f-big: 'Cafe24Ssurround', 'BMJUA', sans-serif;
-  --f-body: 'GmarketSans', 'Malgun Gothic', sans-serif;
+  --f-title: 'KerisKedyuche', 'BusanDandiGothic', sans-serif;
+  --f-big: 'KerisKedyuche', 'BusanDandiGothic', sans-serif;
+  --f-body: 'BusanDandiGothic', 'Malgun Gothic', sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
   font-family: var(--f-body);
+  font-weight: 500;
   color: var(--ink);
   background-color: var(--bg);
   background-image:
@@ -40,10 +42,10 @@ body {
 .banner { text-align: center; padding: 18px 0 8px; }
 .banner .badge {
   display: inline-block; background: var(--yellow); border: 3px solid var(--line); border-radius: 999px;
-  padding: 4px 16px; font-family: var(--f-title); font-size: 15px; box-shadow: 3px 3px 0 var(--line);
+  padding: 4px 16px; font-family: var(--f-title); font-weight: 700; font-size: 15px; box-shadow: 3px 3px 0 var(--line);
   transform: rotate(-2deg);
 }
-.banner h1 { font-family: var(--f-big); font-size: clamp(34px, 9vw, 54px); margin: 10px 0 4px; line-height: 1.15; color: var(--coral); text-shadow: 3px 3px 0 var(--line); -webkit-text-stroke: 1.5px var(--line); letter-spacing: 1px; }
+.banner h1 { font-family: var(--f-big); font-weight: 700; font-size: clamp(34px, 9vw, 54px); margin: 10px 0 4px; line-height: 1.15; color: var(--coral); text-shadow: 3px 3px 0 var(--line); -webkit-text-stroke: 1.5px var(--line); letter-spacing: 1px; }
 .banner p { margin: 0; font-size: 15px; }
 
 /* 카드 */
@@ -51,10 +53,11 @@ body {
   background: var(--card); border: 3px solid var(--line); border-radius: 24px; padding: 24px 22px;
   box-shadow: 6px 6px 0 var(--line); margin-top: 18px;
 }
-.card h2 { font-family: var(--f-title); font-size: 24px; margin: 0 0 14px; font-weight: normal; }
+.card h2 { font-family: var(--f-title); font-weight: 700; font-size: 24px; margin: 0 0 14px; }
 
 /* 폼 */
-label { display: block; font-family: var(--f-title); font-size: 17px; margin: 14px 0 6px; }
+label { display: block; font-family: var(--f-title); font-weight: 700; font-size: 17px; margin: 14px 0 6px; }
+#login-form label:first-child { margin-top: 0; }
 input[type=text], input[type=password], textarea {
   width: 100%; font: inherit; font-size: 18px; padding: 12px 14px; color: var(--ink);
   border: 3px solid var(--line); border-radius: 14px; background: #fffdf6; outline: none;
@@ -65,8 +68,8 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
 /* 버튼 */
 .btn {
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-  min-height: 60px; line-height: 1.25; word-break: keep-all; overflow-wrap: break-word; width: 100%; font-family: var(--f-title); font-size: 22px; color: var(--ink);
-  background: var(--yellow); border: 3px solid var(--line); border-radius: 18px; padding: 16px 18px 12px; /* BMJUA 폰트가 위로 쏠려 보여 시각 중앙 보정(실측 약 1.9px) */
+  min-height: 60px; line-height: 1.25; word-break: keep-all; overflow-wrap: break-word; width: 100%; font-family: var(--f-title); font-weight: 700; font-size: 22px; color: var(--ink);
+  background: var(--yellow); border: 3px solid var(--line); border-radius: 18px; padding: 16px 18px 12px; /* 폰트 상하 여백 차이로 글자가 위로 쏠려 보여 시각 중앙 보정(KerisKedyuche 700 실측 기준 위 20px / 아래 20.25px) */
   box-shadow: 0 5px 0 var(--line); cursor: pointer; transition: transform .08s, box-shadow .08s; margin-top: 16px;
 }
 .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 0 var(--line); }
@@ -76,16 +79,31 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
 .btn.sky { background: var(--sky); }
 .btn.ghost { background: #fff; }
 .btn.small { display: inline-flex; width: auto; margin: 0; white-space: nowrap; }
+/* 로딩 중: 글자는 자리만 유지하고 가운데에 스피너 표시, 클릭 차단 */
+.btn { position: relative; }
+.btn.loading { pointer-events: none; cursor: progress; }
+.btn.loading > * { visibility: hidden; }
+.btn.loading { color: transparent; }
+.btn.loading::after {
+  /* 가상요소는 전역 box-sizing 이 적용되지 않으므로 border-box 를 직접 지정해야 정중앙에 옴 */
+  content: ''; position: absolute; top: 50%; left: 50%; box-sizing: border-box; width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  border: 4px solid rgba(59,47,47,.22); border-top-color: var(--ink); border-radius: 50%;
+  animation: btn-spin .7s linear infinite;
+}
+.btn.coral.loading::after { border-color: rgba(255,255,255,.35); border-top-color: #fff; }
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+.boot { text-align: center; }
+.boot .spinner-lg { width: 44px; height: 44px; margin: 8px auto 12px; border: 5px solid rgba(59,47,47,.18); border-top-color: var(--coral); border-radius: 50%; animation: btn-spin .8s linear infinite; }
 .btn:disabled { background: #e6dfd0; color: #a89f8d; border-color: #b9b19f; box-shadow: 0 5px 0 #b9b19f; cursor: not-allowed; }
-.btn .sub { display: block; font-family: var(--f-body); font-size: 13px; margin-top: 2px; opacity: .85; }
+.btn .sub { display: block; font-weight: 500; font-family: var(--f-body); font-size: 13px; margin-top: 2px; opacity: .85; }
 
 .msg { margin-top: 12px; padding: 10px 14px; border-radius: 12px; font-size: 15px; border: 2px dashed var(--line); background: #fff1ef; }
 .msg.ok { background: #e6faf3; }
 .demo-note { background: var(--pink); border: 2px dashed var(--line); border-radius: 12px; padding: 8px 12px; font-size: 13px; margin-top: 14px; text-align: center; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
-.hello { font-family: var(--f-title); font-size: clamp(26px, 7vw, 32px); }
-.hello b { background: linear-gradient(transparent 60%, var(--yellow) 60%); font-weight: normal; }
+.hello { font-family: var(--f-title); font-weight: 700; font-size: clamp(26px, 7vw, 32px); }
+.hello b { background: linear-gradient(transparent 60%, var(--yellow) 60%); }
 
 /* 메뉴 */
 .menu-grid { display: grid; gap: 6px; }
@@ -95,7 +113,7 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
 .reveal { text-align: center; }
 .envelope { font-size: 90px; line-height: 1; margin: 6px 0; display: inline-block; animation: wobble 1s ease-in-out infinite; }
 @keyframes wobble { 0%,100% { transform: rotate(-6deg) } 50% { transform: rotate(6deg) scale(1.08) } }
-.spinner-name { font-family: var(--f-big); font-size: clamp(44px, 14vw, 76px); color: var(--coral); text-shadow: 3px 3px 0 var(--line); -webkit-text-stroke: 1.5px var(--line); min-height: 1.3em; letter-spacing: 4px; }
+.spinner-name { font-family: var(--f-big); font-weight: 700; font-size: clamp(44px, 14vw, 76px); color: var(--coral); text-shadow: 3px 3px 0 var(--line); -webkit-text-stroke: 1.5px var(--line); min-height: 1.3em; letter-spacing: 4px; }
 .reveal .hint { font-size: 15px; }
 .pop { animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
 @keyframes pop { from { transform: scale(.3); opacity: 0 } to { transform: scale(1); opacity: 1 } }
@@ -105,7 +123,7 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
 /* 삼행시 */
 .poem-head { text-align: left; margin-bottom: 14px; word-break: keep-all; overflow-wrap: break-word; }
 .poem-head .poem-title { text-align: center; font-size: clamp(30px, 8vw, 40px); margin: 0 0 12px; }
-.poem-lead { font-family: var(--f-title); font-size: 17px; margin: 0 0 6px; }
+.poem-lead { font-family: var(--f-title); font-weight: 700; font-size: 17px; margin: 0 0 6px; }
 .poem-notes { list-style: none; margin: 0; padding: 0; font-size: 14px; color: #6a5a4a; }
 .poem-notes li { padding-left: 1.3em; text-indent: -1.3em; }
 .poem-notes li::before { content: '※ '; }
@@ -117,13 +135,13 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
 }
 .char {
   width: var(--h); height: var(--h); display: flex; align-items: center; justify-content: center;
-  font-family: var(--f-big); font-size: calc(var(--h) * .74); line-height: 1; color: #fff;
+  font-family: var(--f-big); font-weight: 700; font-size: calc(var(--h) * .74); line-height: 1; color: #fff;
   border: 3px solid var(--line); border-radius: 20px; box-shadow: 4px 4px 0 var(--line); -webkit-text-stroke: 1.5px var(--line);
   paint-order: stroke fill;
 }
 .char.c0 { background: var(--coral); } .char.c1 { background: var(--mint); } .char.c2 { background: var(--sky); }
 .char.c3 { background: var(--yellow); } .char.c4 { background: var(--pink); }
-.poem-input { height: var(--h); font-size: 22px; border-radius: 18px; font-family: var(--f-title); }
+.poem-input { height: var(--h); font-size: 22px; border-radius: 18px; font-family: var(--f-title); font-weight: 700; }
 .save-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
 .save-info { font-size: 14px; flex: 1; min-width: 160px; }
 @media (max-width: 480px) {
@@ -134,14 +152,14 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
 
 /* 교사 페이지 */
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-.tab { font-family: var(--f-title); font-size: 17px; padding: 8px 18px; border: 3px solid var(--line); border-radius: 999px; background: #fff; cursor: pointer; }
+.tab { font-family: var(--f-title); font-weight: 700; font-size: 17px; padding: 8px 18px; border: 3px solid var(--line); border-radius: 999px; background: #fff; cursor: pointer; }
 .tab.on { background: var(--coral); color: #fff; box-shadow: 3px 3px 0 var(--line); }
 .row-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .row-btns .btn { margin: 0; flex: 1; min-width: 150px; }
 .table-wrap { overflow-x: auto; margin-top: 12px; border: 3px solid var(--line); border-radius: 14px; background: #fff; }
 table { border-collapse: collapse; width: 100%; font-size: 15px; }
 th, td { padding: 8px 10px; border-bottom: 2px solid #eee3cc; text-align: left; white-space: nowrap; }
-th { background: var(--yellow); font-family: var(--f-title); font-weight: normal; position: sticky; top: 0; }
+th { background: var(--yellow); font-family: var(--f-title); font-weight: 700; position: sticky; top: 0; }
 #tab-shuffle th, #tab-shuffle td, #tab-results th, #tab-results td { text-align: center; }
 #tab-results td.poem { text-align: left; }
 td.poem { white-space: normal; min-width: 220px; }
@@ -155,4 +173,5 @@ td.poem { white-space: normal; min-width: 220px; }
 #confirm-modal .card { max-width: 440px; }
 .hist { border-top: 2px dashed #cfc4ad; padding: 10px 0; font-size: 15px; }
 .hist small { color: #8a7d68; display: block; }
+#tab-roster .small-help { margin-bottom: 18px; }
 .small-help { font-size: 13px; color: #7a6c58; margin: 6px 0 0; }

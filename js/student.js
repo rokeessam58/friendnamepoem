@@ -3,7 +3,7 @@
   var user = null;       // {id, name, drawn}
   var manito = '';       // 마니또 이름 (뽑은 뒤)
 
-  var screens = ['s-login', 's-menu', 's-draw', 's-poem'];
+  var screens = ['s-boot', 's-login', 's-menu', 's-draw', 's-poem'];
   function show(id) {
     screens.forEach(function (s) { $(s).classList.toggle('hidden', s !== id); });
     window.scrollTo(0, 0);
@@ -13,7 +13,6 @@
     el.classList.toggle('hidden', !text);
     el.classList.toggle('ok', !!ok);
   }
-  function busy(btn, on) { btn.disabled = on; }
 
   if (Api.isDemo) $('demo-note').classList.remove('hidden');
 
@@ -22,16 +21,16 @@
     e.preventDefault();
     var btn = e.target.querySelector('button');
     msg($('login-msg'), '');
-    busy(btn, true);
     try {
-      var r = await Api.call('login', { id: $('in-id').value.trim(), name: $('in-name').value.trim() });
-      user = r;
-      try { sessionStorage.setItem('manito_user', JSON.stringify({ id: r.id, name: r.name })); } catch (e2) {}
-      enterMenu();
+      await Api.run(btn, async function () {
+        var r = await Api.call('login', { id: $('in-id').value.trim(), name: $('in-name').value.trim() });
+        user = r;
+        try { sessionStorage.setItem('manito_user', JSON.stringify({ id: r.id, name: r.name })); } catch (e2) {}
+        enterMenu();
+      });
     } catch (err) {
       msg($('login-msg'), '😢 ' + err.message);
     }
-    busy(btn, false);
   });
 
   // 나가기: 로그인 정보를 지우고 학번·이름 입력 화면으로 돌아감
@@ -49,12 +48,17 @@
 
   // 새로고침해도 로그인 유지
   (async function restore() {
+    var saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem('manito_user')); } catch (e) {}
+    if (!saved) return;
+    show('s-boot'); // 확인하는 동안 로그인 폼이 깜빡이지 않도록 로딩 화면 표시
     try {
-      var saved = JSON.parse(sessionStorage.getItem('manito_user'));
-      if (!saved) return;
       user = await Api.call('login', saved);
       enterMenu();
-    } catch (e) { /* 무시 */ }
+    } catch (e) {
+      try { sessionStorage.removeItem('manito_user'); } catch (e2) {}
+      show('s-login');
+    }
   })();
 
   /* ----- 메뉴 ----- */
@@ -86,6 +90,16 @@
 
   /* ----- 뽑기 ----- */
   $('btn-draw').addEventListener('click', async function () {
+    msg($('menu-msg'), '');
+    var res;
+    try {
+      // 서버 응답을 받는 동안 버튼에 로딩 표시 → 받은 뒤에 뽑기 화면으로 전환
+      res = await Api.run(this, function () { return Api.call('draw', { id: user.id, name: user.name }); });
+    } catch (err) {
+      msg($('menu-msg'), '😢 ' + err.message);
+      return;
+    }
+    if (!res) return;
     show('s-draw');
     $('draw-stage').classList.remove('hidden');
     $('draw-after').classList.add('hidden');
@@ -94,8 +108,7 @@
     var spin = $('spin');
     spin.classList.remove('pop');
     spin.textContent = '???';
-    try {
-      var res = await Api.call('draw', { id: user.id, name: user.name });
+    {
       manito = res.manitoName;
       // 슬롯머신: 실제 반 친구 이름이 빠르게 바뀌다가 점점 느려지며 멈춤
       var others = (res.names || []).filter(function (n) { return n !== user.name; }); // 본인 이름 제외
@@ -115,9 +128,6 @@
       $('draw-hint').textContent = '🎉 짜잔! 나의 마니또는 바로 이 친구예요!';
       $('draw-after').classList.remove('hidden');
       confetti();
-    } catch (err) {
-      spin.textContent = '😢';
-      $('draw-hint').textContent = err.message;
     }
     $('btn-draw-back').classList.remove('hidden');
   });
@@ -140,22 +150,21 @@
   }
 
   /* ----- 삼행시 ----- */
-  async function openPoem() {
+  async function openPoem(e) {
     msg($('poem-msg'), '');
     msg($('menu-msg'), '');
-    var btn = $('btn-poem');
-    busy(btn, true);
     try {
-      var r = await Api.call('getPoem', { id: user.id, name: user.name });
-      manito = r.manitoName;
-      buildBoard(Array.from(manito), r.lines);
-      $('save-info').textContent = r.savedAt ? '마지막 저장: ' + r.savedAt : '글자 옆 칸을 마음껏 고쳐 쓰세요.';
-      show('s-poem');
+      await Api.run(e.currentTarget, async function () {
+        var r = await Api.call('getPoem', { id: user.id, name: user.name });
+        manito = r.manitoName;
+        buildBoard(Array.from(manito), r.lines);
+        $('save-info').textContent = r.savedAt ? '마지막 저장: ' + r.savedAt : '글자 옆 칸을 마음껏 고쳐 쓰세요.';
+        show('s-poem');
+      });
     } catch (err) {
       msg($('menu-msg'), '😢 ' + err.message);
       show('s-menu');
     }
-    busy(btn, !user.drawn);
   }
 
   function buildBoard(chars, lines) {
@@ -189,16 +198,16 @@
   $('btn-save').addEventListener('click', async function () {
     var btn = $('btn-save');
     var lines = Array.prototype.map.call(document.querySelectorAll('.poem-input'), function (i) { return i.value; });
-    busy(btn, true);
     msg($('poem-msg'), '');
     try {
-      var r = await Api.call('savePoem', { id: user.id, name: user.name, lines: lines });
-      $('save-info').textContent = '마지막 저장: ' + r.savedAt;
-      msg($('poem-msg'), '🎉 저장했어요! 언제든 다시 고칠 수 있어요.', true);
+      await Api.run(btn, async function () {
+        var r = await Api.call('savePoem', { id: user.id, name: user.name, lines: lines });
+        $('save-info').textContent = '마지막 저장: ' + r.savedAt;
+        msg($('poem-msg'), '🎉 저장했어요! 언제든 다시 고칠 수 있어요.', true);
+      });
     } catch (err) {
       msg($('poem-msg'), '😢 ' + err.message);
     }
-    busy(btn, false);
   });
   $('btn-poem-back').addEventListener('click', logout);
 })();

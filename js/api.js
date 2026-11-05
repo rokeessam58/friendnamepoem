@@ -98,5 +98,19 @@ window.Api = (function () {
     return demo[action](load(), data || {});
   }
 
-  return { call: call, isDemo: DEMO };
+  // 버튼 로딩 표시: 실행하는 동안 버튼에 스피너를 띄우고 중복 클릭을 막음.
+  // 이미 실행 중이면 undefined 를 돌려줌 (호출한 쪽은 결과가 없으면 그냥 return)
+  async function run(btn, fn) {
+    if (btn.classList.contains('loading')) return undefined;
+    btn.classList.add('loading');
+    btn.setAttribute('aria-busy', 'true');
+    try {
+      return await fn();
+    } finally {
+      btn.classList.remove('loading');
+      btn.removeAttribute('aria-busy');
+    }
+  }
+
+  return { call: call, run: run, isDemo: DEMO };
 })();

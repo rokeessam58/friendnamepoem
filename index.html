@@ -14,9 +14,14 @@
     <p>나의 마니또를 뽑고, 이름으로 삼행시를 지어요!</p>
   </header>
 
+  <!-- 0. 자동 로그인 확인 중 -->
+  <section id="s-boot" class="card hidden boot" aria-live="polite">
+    <div class="spinner-lg"></div>
+    <div>잠깐만 기다려 주세요…</div>
+  </section>
+
   <!-- 1. 인증 -->
   <section id="s-login" class="card">
-    <h2>👋 누구세요?</h2>
     <form id="login-form" autocomplete="off">
       <label for="in-id">학번</label>
       <input id="in-id" type="text" inputmode="numeric" placeholder="예) 10101" required>
