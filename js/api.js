@@ -112,5 +112,16 @@ window.Api = (function () {
     }
   }
 
-  return { call: call, run: run, isDemo: DEMO };
+  // 시각 표시용: yyyy. MM. dd. HH:mm:ss (GMT 등 불필요한 부분 제거)
+  function fmt(v) {
+    if (!v) return '';
+    var p2 = function (n) { return String(n).padStart(2, '0'); };
+    var m = String(v).match(/^(\d{4})[-.\s]+(\d{1,2})[-.\s]+(\d{1,2})\.?\s+(\d{1,2}):(\d{2}):(\d{2})/);
+    if (m) return m[1] + '. ' + p2(m[2]) + '. ' + p2(m[3]) + '. ' + p2(m[4]) + ':' + m[5] + ':' + m[6];
+    var d = new Date(v);
+    if (isNaN(d)) return String(v);
+    return d.getFullYear() + '. ' + p2(d.getMonth() + 1) + '. ' + p2(d.getDate()) + '. ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
+  }
+
+  return { call: call, run: run, fmt: fmt, isDemo: DEMO };
 })();

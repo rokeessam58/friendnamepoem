@@ -161,12 +161,14 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
 .row-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .row-btns .btn { margin: 0; flex: 1; min-width: 150px; }
 .table-wrap { overflow-x: auto; margin-top: 12px; border: 3px solid var(--line); border-radius: 14px; background: #fff; }
-table { border-collapse: collapse; width: 100%; font-size: 15px; }
-th, td { padding: 8px 10px; border-bottom: 2px solid #eee3cc; text-align: left; white-space: nowrap; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; table-layout: fixed; }
+.t-shuffle { min-width: 420px; }
+.t-results { min-width: 760px; }
+th, td { padding: 8px 10px; border-bottom: 2px solid #eee3cc; text-align: left; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
 th { background: var(--yellow); font-family: var(--f-title); font-weight: 700; position: sticky; top: 0; }
 #tab-shuffle th, #tab-shuffle td, #tab-results th, #tab-results td { text-align: center; }
 #tab-results td.poem { text-align: left; }
-td.poem { white-space: normal; min-width: 220px; }
+
 .tag { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 12px; border: 2px solid var(--line); }
 .tag.y { background: var(--mint); } .tag.n { background: #eee; }
 .stat { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }

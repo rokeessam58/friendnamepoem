@@ -63,7 +63,8 @@
         <button id="btn-reset-draw" class="btn ghost" type="button">뽑기 상태만 초기화</button>
       </div>
       <div id="shuffle-msg" class="msg hidden"></div>
-      <div class="table-wrap"><table>
+      <div class="table-wrap"><table class="t-shuffle">
+        <colgroup><col style="width:24%"><col style="width:28%"><col style="width:12%"><col style="width:36%"></colgroup>
         <thead><tr><th>학번</th><th>이름</th><th>→</th><th>마니또 이름</th></tr></thead>
         <tbody id="shuffle-body"></tbody>
       </table></div>
@@ -77,7 +78,8 @@
         <button id="btn-csv" class="btn ghost" type="button" style="flex:0 0 auto;min-width:0;width:auto">CSV 내려받기</button>
       </div>
       <div id="result-msg" class="msg hidden"></div>
-      <div class="table-wrap"><table>
+      <div class="table-wrap"><table class="t-results">
+        <colgroup><col style="width:10%"><col style="width:11%"><col style="width:11%"><col style="width:9%"><col style="width:30%"><col style="width:20%"><col style="width:9%"></colgroup>
         <thead><tr><th>학번</th><th>이름</th><th>마니또</th><th>뽑기</th><th>삼행시(최신)</th><th>저장</th><th></th></tr></thead>
         <tbody id="result-body"></tbody>
       </table></div>

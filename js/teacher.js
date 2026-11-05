@@ -166,7 +166,7 @@
       var poem = r.lines ? r.lines.map(function (l) { return esc(l); }).join('<br>') : '<span class="tag n">아직 없음</span>';
       return '<tr><td>' + esc(r.id) + '</td><td>' + esc(r.name) + '</td><td>' + (r.manitoName ? esc(r.manitoName) : '-') + '</td>' +
         '<td>' + (r.drawnAt ? '<span class="tag y">완료</span>' : '<span class="tag n">대기</span>') + '</td>' +
-        '<td class="poem">' + poem + '</td><td>' + esc(r.savedAt || '-') + (r.count > 1 ? ' <small>(' + r.count + '회)</small>' : '') + '</td>' +
+        '<td class="poem">' + poem + '</td><td>' + esc(Api.fmt(r.savedAt) || '-') + (r.count > 1 ? ' <small>(' + r.count + '회)</small>' : '') + '</td>' +
         '<td>' + (r.count ? '<button class="btn small ghost" data-hist="' + i + '">기록</button>' : '') + '</td></tr>';
     }).join('') || '<tr><td colspan="7">등록된 학생이 없어요.</td></tr>';
   }
@@ -180,7 +180,7 @@
       if (!list) return;
       $('modal-title').textContent = r.name + ' → ' + r.manitoName + ' 저장 기록';
       $('modal-body').innerHTML = list.map(function (h, i) {
-        return '<div class="hist"><small>' + esc(h.at) + (i === 0 ? ' · 최신' : '') + '</small>' + h.lines.map(esc).join('<br>') + '</div>';
+        return '<div class="hist"><small>' + esc(Api.fmt(h.at)) + (i === 0 ? ' · 최신' : '') + '</small>' + h.lines.map(esc).join('<br>') + '</div>';
       }).join('');
       $('modal').classList.remove('hidden');
     } catch (err) { msg($('result-msg'), '😢 ' + err.message); }
@@ -191,7 +191,7 @@
   $('btn-csv').addEventListener('click', function () {
     var q = function (s) { return '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'; };
     var csv = ['학번,이름,마니또학번,마니또이름,뽑기,삼행시,저장시각'].concat(rows.map(function (r) {
-      return [r.id, r.name, r.manitoId, r.manitoName, r.drawnAt ? '완료' : '대기', r.lines ? r.lines.join(' / ') : '', r.savedAt].map(q).join(',');
+      return [r.id, r.name, r.manitoId, r.manitoName, r.drawnAt ? '완료' : '대기', r.lines ? r.lines.join(' / ') : '', Api.fmt(r.savedAt)].map(q).join(',');
     })).join('\r\n');
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));

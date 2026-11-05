@@ -216,7 +216,7 @@ function readPoems_() {
   return sh.getRange(2, 1, sh.getLastRow() - 1, 5).getValues().map(function (r) {
     var lines = [];
     try { lines = JSON.parse(r[4]); } catch (e) {}
-    return { at: String(r[0]), id: String(r[1]).trim(), name: String(r[2]), manitoName: String(r[3]), lines: lines };
+    return { at: fmt_(r[0]), id: String(r[1]).trim(), name: String(r[2]), manitoName: String(r[3]), lines: lines };
   });
 }
 
@@ -254,6 +254,11 @@ function sheet_(name, header, textCols) {
 }
 
 function clean_(s) { return String(s || '').replace(/\s+/g, ''); }
+// 시트가 날짜로 자동 변환한 셀도 보기 좋게: yyyy. MM. dd. HH:mm:ss
+function fmt_(v) {
+  if (v instanceof Date) return Utilities.formatDate(v, TZ, 'yyyy. MM. dd. HH:mm:ss');
+  return String(v);
+}
 function now_() { return Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'); }
 function range_(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
 function shuffle_(a) {

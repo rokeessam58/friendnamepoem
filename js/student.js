@@ -158,7 +158,7 @@
         var r = await Api.call('getPoem', { id: user.id, name: user.name });
         manito = r.manitoName;
         buildBoard(Array.from(manito), r.lines);
-        $('save-info').textContent = r.savedAt ? '마지막 저장: ' + r.savedAt : '';
+        $('save-info').textContent = r.savedAt ? '마지막 저장: ' + Api.fmt(r.savedAt) : '';
         show('s-poem');
       });
     } catch (err) {
@@ -202,7 +202,7 @@
     try {
       await Api.run(btn, async function () {
         var r = await Api.call('savePoem', { id: user.id, name: user.name, lines: lines });
-        $('save-info').textContent = '마지막 저장: ' + r.savedAt;
+        $('save-info').textContent = '마지막 저장: ' + Api.fmt(r.savedAt);
         msg($('poem-msg'), '🎉 저장했어요! 언제든 다시 고칠 수 있어요.', true);
       });
     } catch (err) {
