@@ -57,6 +57,7 @@ body {
 
 /* 폼 */
 label { display: block; font-family: var(--f-title); font-weight: 700; font-size: 17px; margin: 14px 0 6px; }
+#login-form label { font-size: 22px; }
 #login-form label:first-child { margin-top: 0; }
 input[type=text], input[type=password], textarea {
   width: 100%; font: inherit; font-size: 18px; padding: 12px 14px; color: var(--ink);
