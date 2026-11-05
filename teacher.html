@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>마니또 삼행시 - 교사용</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap wide">
+  <header class="banner">
+    <span class="badge">🍎 선생님 전용</span>
+    <h1>마니또 관리실</h1>
+  </header>
+
+  <!-- 비밀번호 -->
+  <section id="t-login" class="card" style="max-width:480px;margin-left:auto;margin-right:auto">
+    <h2>🔐 비밀번호</h2>
+    <form id="t-form">
+      <input id="t-pw" type="password" placeholder="교사용 비밀번호" autocomplete="off" required>
+      <button class="btn coral" type="submit">들어가기</button>
+      <div id="t-login-msg" class="msg hidden"></div>
+    </form>
+    <div id="t-demo" class="demo-note hidden">🧪 데모 모드 비밀번호: <b>1234</b></div>
+  </section>
+
+  <!-- 관리 -->
+  <section id="t-main" class="hidden">
+    <div class="tabs">
+      <button class="tab on" data-tab="roster">① 학생 명단</button>
+      <button class="tab" data-tab="shuffle">② 마니또 셔플</button>
+      <button class="tab" data-tab="results">③ 결과 조회</button>
+      <button class="tab" id="t-logout" style="margin-left:auto">나가기</button>
+    </div>
+
+    <div id="tab-roster" class="card">
+      <h2>학생 명단 등록</h2>
+      <p class="small-help">한 줄에 한 명씩 <b>학번 이름</b> 으로 적어요. (공백·탭·쉼표 모두 OK → 엑셀/시트에서 두 열을 복사해 붙여넣어도 돼요.)<br>
+      ⚠️ 저장하면 기존 명단이 <b>통째로 교체</b>되고 마니또 배정과 뽑기 기록은 초기화돼요. (삼행시 기록은 시트에 남아요)</p>
+      <textarea id="roster-text" placeholder="10101 홍길동&#10;10102 김철수&#10;10103 이영희"></textarea>
+      <div class="row-btns">
+        <button id="btn-sample" class="btn ghost" type="button">예시 명단 넣기</button>
+        <button id="btn-roster-save" class="btn mint" type="button">명단 저장하기</button>
+      </div>
+      <div id="roster-msg" class="msg hidden"></div>
+    </div>
+
+    <div id="tab-shuffle" class="card hidden">
+      <h2>마니또 셔플</h2>
+      <p class="small-help">모든 학생이 <b>자기 자신이 아닌</b> 마니또를 한 명씩 받도록 무작위로 정해서 저장해요.<br>
+      다시 셔플하면 배정이 바뀌고 학생들의 "뽑기" 상태도 처음으로 돌아가요.</p>
+      <div class="stat" id="shuffle-stat"></div>
+      <div class="row-btns">
+        <button id="btn-shuffle" class="btn coral" type="button">🎲 마니또 셔플</button>
+        <button id="btn-reset-draw" class="btn ghost" type="button">뽑기 상태만 초기화</button>
+      </div>
+      <div id="shuffle-msg" class="msg hidden"></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>학번</th><th>이름</th><th>→</th><th>마니또 이름</th></tr></thead>
+        <tbody id="shuffle-body"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-results" class="card hidden">
+      <h2>결과 조회</h2>
+      <div class="stat" id="result-stat"></div>
+      <div class="row-btns" style="margin-top:10px">
+        <button id="btn-reload" class="btn mint" type="button" style="flex:0 0 auto;min-width:0;width:auto">🔄 새로고침</button>
+        <button id="btn-csv" class="btn ghost" type="button" style="flex:0 0 auto;min-width:0;width:auto">CSV 내려받기</button>
+      </div>
+      <div id="result-msg" class="msg hidden"></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>학번</th><th>이름</th><th>마니또</th><th>뽑기</th><th>삼행시(최신)</th><th>저장</th><th></th></tr></thead>
+        <tbody id="result-body"></tbody>
+      </table></div>
+    </div>
+  </section>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="card">
+    <h2 id="modal-title">저장 기록</h2>
+    <div id="modal-body"></div>
+    <button id="modal-close" class="btn ghost" type="button">닫기</button>
+  </div>
+</div>
+
+<div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="card">
+    <h2 id="confirm-title">확인해 주세요</h2>
+    <p id="confirm-text" class="confirm-text"></p>
+    <div class="row-btns">
+      <button id="confirm-cancel" class="btn ghost" type="button">취소</button>
+      <button id="confirm-ok" class="btn coral" type="button">확인</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/teacher.js"></script>
+</body>
+</html>

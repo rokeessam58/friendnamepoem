@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마니또 삼행시</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="banner">
+    <span class="badge">🎁 1학년 2반</span>
+    <h1>마니또 삼행시</h1>
+    <p>나의 마니또를 뽑고, 이름으로 삼행시를 지어요!</p>
+  </header>
+
+  <!-- 1. 인증 -->
+  <section id="s-login" class="card">
+    <h2>👋 누구세요?</h2>
+    <form id="login-form" autocomplete="off">
+      <label for="in-id">학번</label>
+      <input id="in-id" type="text" inputmode="numeric" placeholder="예) 10101" required>
+      <label for="in-name">이름</label>
+      <input id="in-name" type="text" placeholder="예) 홍길동" required>
+      <button class="btn coral" type="submit">들어가기</button>
+      <div id="login-msg" class="msg hidden"></div>
+    </form>
+    <div id="demo-note" class="demo-note hidden">🧪 데모 모드예요 (서버 연결 전). 교사 페이지에서 명단을 등록한 뒤 셔플하면 체험할 수 있어요.</div>
+  </section>
+
+  <!-- 2. 메뉴 -->
+  <section id="s-menu" class="card hidden">
+    <div class="topbar">
+      <div class="hello"><b id="hello-name"></b><span id="hello-suffix"></span>, 안녕! 🎉</div>
+      <button id="btn-logout" class="btn ghost small" type="button">나가기</button>
+    </div>
+    <div class="menu-grid">
+      <button id="btn-draw" class="btn coral" type="button"><span class="step-tag">STEP 1</span>내 마니또 뽑기 🎲<span class="sub" id="draw-sub">두근두근, 누구일까요?</span></button>
+      <button id="btn-poem" class="btn mint" type="button" disabled><span class="step-tag">STEP 2</span>마니또 이름으로 삼행시 짓기 ✏️<span class="sub" id="poem-sub">먼저 마니또를 뽑아야 열려요</span></button>
+    </div>
+    <div id="menu-msg" class="msg hidden"></div>
+  </section>
+
+  <!-- 3. 뽑기 결과 -->
+  <section id="s-draw" class="card hidden reveal">
+    <h2>🎲 내 마니또는…</h2>
+    <div id="draw-stage">
+      <div class="envelope">💌</div>
+      <div class="spinner-name" id="spin">???</div>
+    </div>
+    <p class="hint" id="draw-hint">두구두구두구…</p>
+    <div id="draw-after" class="hidden">
+      <p class="hint">마니또는 <b>끝까지 비밀</b>이에요! 🤫<br>이제 삼행시로 마음을 전해 볼까요?</p>
+      <button id="btn-go-poem" class="btn mint" type="button">삼행시 지으러 가기 ✏️</button>
+    </div>
+    <button id="btn-draw-back" class="btn ghost" type="button">나가기</button>
+  </section>
+
+  <!-- 4. 삼행시 -->
+  <section id="s-poem" class="card hidden">
+    <div class="poem-head">
+      <h2 class="poem-title">💝 삼행시 짓기 ✏️</h2>
+      <p class="poem-lead">친구를 생각하는 마음을 담아, 재치 있는 삼행시를 지어 주세요!</p>
+      <ul class="poem-notes">
+        <li>투표를 통해 선정된 우수작에게는 상품이 있습니다!</li>
+        <li>우수작이 정해진 후, 누가 누구의 마니또였는지가 모두 공개됩니다.</li>
+        <li>지나치게 놀리거나 비하하는 표현, 비속어 금지</li>
+      </ul>
+    </div>
+    <div id="poem-board" class="poem-board"></div>
+    <div class="save-row">
+      <div class="save-info" id="save-info">글자 옆 칸을 마음껏 고쳐 쓰세요.</div>
+    </div>
+    <button id="btn-save" class="btn coral" type="button">저장하기 💾</button>
+    <div id="poem-msg" class="msg hidden"></div>
+    <button id="btn-poem-back" class="btn ghost" type="button">나가기</button>
+  </section></div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/student.js"></script>
+</body>
+</html>
