@@ -38,6 +38,7 @@
       <button class="tab on" data-tab="roster">① 학생 명단</button>
       <button class="tab" data-tab="shuffle">② 마니또 셔플</button>
       <button class="tab" data-tab="results">③ 결과 조회</button>
+      <button class="tab" data-tab="vote">④ 투표</button>
       <button class="tab" id="t-logout" style="margin-left:auto">나가기</button>
     </div>
 
@@ -84,6 +85,27 @@
         <tbody id="result-body"></tbody>
       </table></div>
     </div>
+
+    <div id="tab-vote" class="card hidden">
+      <h2>삼행시 투표</h2>
+      <p class="small-help">투표를 시작하면 학생 화면의 <b>STEP 3 투표하기</b> 버튼이 열려요. 학생에게는 <b>작성자 없이</b>, 삼행시 대상(마니또) 이름의 <b>명단 순서</b>대로 보여요. 자기가 쓴 삼행시는 목록에서 빠져요.</p>
+      <div class="stat" id="vote-stat"></div>
+      <label for="vote-picks" style="margin-top:14px">학생 1명이 고를 삼행시 수</label>
+      <input id="vote-picks" type="number" min="1" value="3" inputmode="numeric" style="max-width:160px">
+      <div class="row-btns" style="margin-top:14px">
+        <button id="btn-vote-toggle" class="btn coral" type="button">▶ 투표 시작</button>
+        <button id="btn-vote-results" class="btn mint" type="button">📊 투표 결과 보기</button>
+        <button id="btn-vote-reset" class="btn ghost" type="button">투표 기록 초기화</button>
+      </div>
+      <div id="vote-msg" class="msg hidden"></div>
+      <div id="vote-result-wrap" class="hidden">
+        <div class="table-wrap"><table class="t-vote">
+          <colgroup><col style="width:9%"><col style="width:16%"><col style="width:45%"><col style="width:16%"><col style="width:14%"></colgroup>
+          <thead><tr><th>순위</th><th>대상(마니또)</th><th>삼행시</th><th>작성자</th><th>득표</th></tr></thead>
+          <tbody id="vote-body"></tbody>
+        </table></div>
+      </div>
+    </div>
   </section>
 </div>
 
@@ -92,6 +114,33 @@
     <h2 id="modal-title">저장 기록</h2>
     <div id="modal-body"></div>
     <button id="modal-close" class="btn ghost" type="button">닫기</button>
+  </div>
+</div>
+
+<div id="vote-choice-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="card">
+    <h2>투표 결과 보기</h2>
+    <p class="confirm-text">어떤 방식으로 볼까요?</p>
+    <div class="choice-btns">
+      <button id="vote-choice-list" class="btn mint" type="button">📋 목록형 (전체)</button>
+      <button id="vote-choice-top" class="btn coral" type="button">🏆 상위권만 (발표)</button>
+      <button id="vote-choice-cancel" class="btn ghost" type="button">취소</button>
+    </div>
+  </div>
+</div>
+
+<div id="podium-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="card podium-card">
+    <button id="podium-authors" class="btn ghost small" type="button">✍️ 작성자 보기</button>
+    <h2 id="podium-title" class="podium-title">🏆 우수작 발표</h2>
+    <div id="podium" class="podium"></div>
+    <div id="podium-rest" class="podium-rest"></div>
+    <div class="row-btns" style="margin-top:18px">
+      <button id="podium-next" class="btn coral" type="button">▶ 발표하기</button>
+      <button id="podium-all" class="btn mint" type="button">전체 공개</button>
+      <button id="podium-restart" class="btn ghost" type="button">처음부터</button>
+      <button id="podium-close" class="btn ghost" type="button">닫기</button>
+    </div>
   </div>
 </div>
 

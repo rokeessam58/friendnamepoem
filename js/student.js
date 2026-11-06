@@ -3,7 +3,8 @@
   var user = null;       // {id, name, drawn}
   var manito = '';       // 마니또 이름 (뽑은 뒤)
 
-  var screens = ['s-boot', 's-login', 's-menu', 's-draw', 's-poem'];
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var screens = ['s-boot', 's-login', 's-menu', 's-draw', 's-poem', 's-vote'];
   function show(id) {
     screens.forEach(function (s) { $(s).classList.toggle('hidden', s !== id); });
     window.scrollTo(0, 0);
@@ -42,6 +43,8 @@
     msg($('menu-msg'), '');
     msg($('poem-msg'), '');
     $('poem-board').innerHTML = '';
+    $('vote-list').innerHTML = '';
+    msg($('vote-msg2'), '');
     show('s-login');
   }
   $('btn-logout').addEventListener('click', logout);
@@ -86,7 +89,18 @@
     $('btn-poem').disabled = !drawn;
     $('poem-sub').textContent = drawn ? '내 마니또의 이름으로 마음을 전해요' : '먼저 마니또를 뽑아야 열려요';
     $('draw-sub').textContent = drawn ? '다시 한번 확인해 볼까요?' : '두근두근, 누구일까요?';
+    var open = !!(user.vote && user.vote.open);
+    $('btn-vote').disabled = !open;
+    $('vote-sub').textContent = open ? '마음에 드는 삼행시를 골라요' : '선생님이 투표를 시작하면 열려요';
   }
+  // 메뉴 화면이 열려 있는 동안 투표 시작/마감을 주기적으로 확인
+  setInterval(async function () {
+    if (!user || $('s-menu').classList.contains('hidden')) return;
+    try {
+      user.vote = await Api.call('voteStatus', { id: user.id, name: user.name });
+      if (!$('s-menu').classList.contains('hidden')) refreshMenu();
+    } catch (e) {}
+  }, 15000);
 
   /* ----- 뽑기 ----- */
   $('btn-draw').addEventListener('click', async function () {
@@ -209,5 +223,71 @@
       msg($('poem-msg'), '😢 ' + err.message);
     }
   });
-  $('btn-poem-back').addEventListener('click', logout);
+  // 돌아가기: STEP 1·2·3 버튼이 있는 메뉴로
+  function backToMenu() { msg($('poem-msg'), ''); msg($('vote-msg2'), ''); refreshMenu(); show('s-menu'); }
+  $('btn-poem-back').addEventListener('click', backToMenu);
+  $('btn-vote-back').addEventListener('click', backToMenu);
+
+  /* ----- 투표 ----- */
+  var picked = [], picksNeeded = 0;
+  $('btn-vote').addEventListener('click', async function () {
+    msg($('menu-msg'), '');
+    try {
+      await Api.run(this, async function () {
+        var r = await Api.call('getBallot', { id: user.id, name: user.name });
+        picksNeeded = r.picks;
+        picked = r.selected.filter(function (k) { return r.items.some(function (x) { return x.key === k; }); });
+        buildVote(r.items);
+        $('vote-lead').textContent = '마음에 드는 삼행시를 ' + r.picks + '개 골라 주세요!';
+        updateVoteBar();
+        msg($('vote-msg2'), r.selected.length ? '이미 투표했어요. 다시 골라서 제출하면 바뀌어요.' : '', true);
+        show('s-vote');
+      });
+    } catch (err) {
+      msg($('menu-msg'), '😢 ' + err.message);
+      try { user.vote = await Api.call('voteStatus', { id: user.id, name: user.name }); } catch (e) {}
+      refreshMenu();
+    }
+  });
+  function buildVote(items) {
+    var list = $('vote-list');
+    list.innerHTML = '';
+    items.forEach(function (it) {
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'vote-card' + (picked.indexOf(it.key) >= 0 ? ' on' : '');
+      var chars = Array.from(it.manitoName);
+      var html = '<div class="vc-title">💝 ' + esc(it.manitoName) + '</div><span class="vc-check"></span>';
+      it.lines.forEach(function (l, i) {
+        html += '<div class="vc-line"><span class="vc-char">' + esc(chars[i] || '') + '</span><span>' + esc(l) + '</span></div>';
+      });
+      card.innerHTML = html;
+      card.addEventListener('click', function () {
+        var at = picked.indexOf(it.key);
+        if (at >= 0) picked.splice(at, 1);
+        else if (picked.length >= picksNeeded) { msg($('vote-msg2'), '😅 ' + picksNeeded + '개까지만 고를 수 있어요. 다른 걸 취소하고 골라 주세요.'); return; }
+        else picked.push(it.key);
+        msg($('vote-msg2'), '');
+        card.classList.toggle('on', picked.indexOf(it.key) >= 0);
+        updateVoteBar();
+      });
+      list.appendChild(card);
+    });
+  }
+  function updateVoteBar() {
+    $('vote-count').textContent = picked.length + ' / ' + picksNeeded + '개 선택';
+    $('vote-count').parentNode.classList.toggle('full', picked.length === picksNeeded);
+    $('btn-vote-submit').disabled = picked.length !== picksNeeded;
+  }
+  $('btn-vote-submit').addEventListener('click', async function () {
+    msg($('vote-msg2'), '');
+    try {
+      await Api.run(this, async function () {
+        await Api.call('submitVote', { id: user.id, name: user.name, keys: picked });
+        msg($('vote-msg2'), '🎉 투표했어요! 투표가 끝나기 전까지는 다시 고칠 수 있어요.', true);
+      });
+    } catch (err) {
+      msg($('vote-msg2'), '😢 ' + err.message);
+    }
+  });
 })();

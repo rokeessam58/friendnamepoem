@@ -73,8 +73,9 @@
   document.querySelectorAll('.tab[data-tab]').forEach(function (b) {
     b.addEventListener('click', function () {
       document.querySelectorAll('.tab[data-tab]').forEach(function (x) { x.classList.toggle('on', x === b); });
-      ['roster', 'shuffle', 'results'].forEach(function (n) { $('tab-' + n).classList.toggle('hidden', n !== b.dataset.tab); });
-      if (b.dataset.tab !== 'roster') loadResults();
+      ['roster', 'shuffle', 'results', 'vote'].forEach(function (n) { $('tab-' + n).classList.toggle('hidden', n !== b.dataset.tab); });
+      if (b.dataset.tab === 'vote') loadVote();
+      else if (b.dataset.tab !== 'roster') loadResults();
     });
   });
 
@@ -167,7 +168,7 @@
       return '<tr><td>' + esc(r.id) + '</td><td>' + esc(r.name) + '</td><td>' + (r.manitoName ? esc(r.manitoName) : '-') + '</td>' +
         '<td>' + (r.drawnAt ? '<span class="tag y">완료</span>' : '<span class="tag n">대기</span>') + '</td>' +
         '<td class="poem">' + poem + '</td><td>' + esc(Api.fmt(r.savedAt) || '-') + (r.count > 1 ? ' <small>(' + r.count + '회)</small>' : '') + '</td>' +
-        '<td>' + (r.count ? '<button class="btn small ghost" data-hist="' + i + '">기록</button>' : '') + '</td></tr>';
+        '<td>' + (r.count ? '<button type="button" class="tag b" data-hist="' + i + '">기록</button>' : '') + '</td></tr>';
     }).join('') || '<tr><td colspan="7">등록된 학생이 없어요.</td></tr>';
   }
   $('btn-reload').addEventListener('click', function () { Api.run(this, loadResults); });
@@ -187,6 +188,158 @@
   });
   $('modal-close').addEventListener('click', function () { $('modal').classList.add('hidden'); });
   $('modal').addEventListener('click', function (e) { if (e.target === $('modal')) $('modal').classList.add('hidden'); });
+
+  /* ----- 투표 ----- */
+  var vote = null;
+  async function loadVote() {
+    try {
+      vote = await t('tVoteGet');
+      renderVote();
+    } catch (err) { msg($('vote-msg'), '😢 ' + err.message); }
+  }
+  function renderVote() {
+    $('vote-stat').innerHTML = '<span>' + (vote.open ? '🟢 투표 진행 중' : '⚪ 투표 대기/마감') + '</span><span>✏️ 투표 대상 삼행시 ' + vote.poems + '개</span><span>🗳️ 참여 ' + vote.voters + ' / ' + vote.students + '명</span>';
+    var toggle = $('btn-vote-toggle');
+    toggle.textContent = vote.open ? '⏹ 투표 마감' : '▶ 투표 시작';
+    toggle.className = 'btn ' + (vote.open ? 'ghost' : 'coral');
+    $('vote-picks').disabled = vote.open;
+    if (vote.open || !$('vote-picks').dataset.touched) $('vote-picks').value = vote.picks;
+  }
+  $('vote-picks').addEventListener('input', function () { this.dataset.touched = '1'; });
+  $('btn-vote-toggle').addEventListener('click', async function () {
+    var btn = this;
+    if (btn.classList.contains('loading')) return;
+    var opening = !vote || !vote.open;
+    var picks = parseInt($('vote-picks').value, 10);
+    if (opening) {
+      if (!picks || picks < 1) { msg($('vote-msg'), '😢 고를 삼행시 수를 1 이상으로 입력해 주세요.'); return; }
+      if (!await confirmModal('학생이 삼행시 ' + picks + '개를 고르도록 투표를 시작할까요?\n학생 화면의 STEP 3 버튼이 열려요.', '투표 시작', '시작')) return;
+    } else if (!await confirmModal('투표를 마감할까요?\n마감하면 학생들은 더 이상 투표하거나 고칠 수 없어요.', '투표 마감', '마감')) return;
+    try {
+      await Api.run(btn, async function () {
+        vote = await t('tVoteSet', { open: opening, picks: picks });
+        renderVote();
+        msg($('vote-msg'), opening ? '✅ 투표를 시작했어요!' : '✅ 투표를 마감했어요.', true);
+        if (!$('vote-result-wrap').classList.contains('hidden')) await loadVoteResults();
+      });
+    } catch (err) { msg($('vote-msg'), '😢 ' + err.message); }
+  });
+  async function loadVoteResults() {
+    var r = await t('tVoteResults');
+    var body = $('vote-body');
+    body.innerHTML = r.items.map(function (x) {
+      return '<tr><td><b>' + x.rank + '</b></td><td>' + esc(x.manitoName) + '</td><td class="poem">' + x.lines.map(esc).join('<br>') + '</td><td>' + esc(x.authorName) + '</td><td><b>' + x.votes + '</b></td></tr>';
+    }).join('') || '<tr><td colspan="5">저장된 삼행시가 없어요.</td></tr>';
+    $('vote-result-wrap').classList.remove('hidden');
+    vote = await t('tVoteGet'); renderVote();
+  }
+  /* 결과 보기: 먼저 보는 방식을 물어봄 */
+  $('btn-vote-results').addEventListener('click', function () {
+    msg($('vote-msg'), '');
+    $('vote-choice-modal').classList.remove('hidden');
+  });
+  function closeChoice() { $('vote-choice-modal').classList.add('hidden'); }
+  $('vote-choice-cancel').addEventListener('click', closeChoice);
+  $('vote-choice-modal').addEventListener('click', function (e) { if (e.target === $('vote-choice-modal')) closeChoice(); });
+  $('vote-choice-list').addEventListener('click', function () {
+    Api.run(this, async function () {
+      try { await loadVoteResults(); closeChoice(); } catch (err) { closeChoice(); msg($('vote-msg'), '😢 ' + err.message); }
+    });
+  });
+  $('vote-choice-top').addEventListener('click', function () {
+    Api.run(this, async function () {
+      try {
+        var r = await t('tVoteResults');
+        closeChoice();
+        openPodium(r.items);
+      } catch (err) { closeChoice(); msg($('vote-msg'), '😢 ' + err.message); }
+    });
+  });
+
+  /* ----- 상위권 발표 (5위부터 차례로) ----- */
+  var podItems = [], podOrder = [], podStep = 0;
+  function medal(rank) { return ['', '🥇', '🥈', '🥉'][rank] || ''; } // 공동 순위는 같은 메달
+  function podCardHtml(x) {
+    return '<div class="pd-target">💝 ' + esc(x.manitoName) + '</div>' +
+      '<div class="pd-lines">' + x.lines.map(esc).join('<br>') + '</div>' +
+      '<div class="pd-meta"><b>' + x.votes + '표</b></div>' +
+      '<div class="pd-author">' + esc(x.authorName) + '</div>';
+  }
+  function openPodium(items) {
+    podItems = items.slice(0, 5);
+    podOrder = podItems.map(function (_, i) { return i; }).reverse(); // 5위 → 1위
+    podStep = 0;
+    $('podium-modal').classList.remove('show-authors');
+    $('podium-authors').textContent = '✍️ 작성자 보기';
+    // 시상대: 2위 | 1위 | 3위 순서로 배치
+    $('podium').innerHTML = [1, 0, 2].map(function (i) {
+      if (!podItems[i]) return '';
+      return '<div class="pd-col p' + (i + 1) + '" data-i="' + i + '"><div class="pd-card pd-hidden"><div class="pd-q">❓</div></div>' +
+        '<div class="pd-block"><span>' + medal(podItems[i].rank) + '</span>' + podItems[i].rank + '위</div></div>';
+    }).join('');
+    $('podium-rest').innerHTML = [3, 4].map(function (i) {
+      if (!podItems[i]) return '';
+      return '<div class="pd-row pd-hidden" data-i="' + i + '"><span class="pd-rank">' + podItems[i].rank + '위</span><div class="pd-body">❓ 아직 비밀이에요</div></div>';
+    }).join('');
+    $('podium-rest').classList.toggle('hidden', !podItems[3]);
+    $('podium-title').textContent = podItems.length ? '🏆 우수작 발표' : '아직 투표 결과가 없어요';
+    updatePodiumBtn();
+    $('podium-modal').classList.remove('hidden');
+  }
+  function updatePodiumBtn() {
+    var btn = $('podium-next');
+    if (podStep >= podOrder.length) { btn.textContent = '🎉 발표 끝!'; btn.disabled = true; $('podium-all').disabled = true; return; }
+    btn.disabled = false; $('podium-all').disabled = false;
+    btn.textContent = '▶ ' + podItems[podOrder[podStep]].rank + '위 발표';
+  }
+  function revealOne() {
+    if (podStep >= podOrder.length) return;
+    var i = podOrder[podStep++];
+    var x = podItems[i];
+    var el = i < 3 ? document.querySelector('.pd-col[data-i="' + i + '"] .pd-card') : document.querySelector('.pd-row[data-i="' + i + '"]');
+    if (el) {
+      if (i < 3) el.innerHTML = podCardHtml(x);
+      else el.querySelector('.pd-body').innerHTML = podCardHtml(x);
+      el.classList.remove('pd-hidden');
+      el.classList.add('pd-pop');
+      if (i === 0) confetti();
+    }
+    updatePodiumBtn();
+  }
+  $('podium-authors').addEventListener('click', function () {
+    var on = $('podium-modal').classList.toggle('show-authors');
+    this.textContent = on ? '✍️ 작성자 숨기기' : '✍️ 작성자 보기';
+  });
+  $('podium-next').addEventListener('click', revealOne);
+  $('podium-all').addEventListener('click', function () { while (podStep < podOrder.length) revealOne(); });
+  $('podium-restart').addEventListener('click', function () { openPodium(podItems); });
+  $('podium-close').addEventListener('click', function () { $('podium-modal').classList.add('hidden'); });
+  function confetti() {
+    var emojis = ['🎉', '✨', '💖', '⭐', '🎈', '🏆', '🎊'];
+    for (var i = 0; i < 40; i++) {
+      var el = document.createElement('div');
+      el.className = 'confetti';
+      el.textContent = emojis[i % emojis.length];
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.animationDuration = 2 + Math.random() * 2 + 's';
+      el.style.animationDelay = Math.random() * 0.8 + 's';
+      document.body.appendChild(el);
+      setTimeout(function (x) { x.remove(); }, 5500, el);
+    }
+  }
+
+  $('btn-vote-reset').addEventListener('click', async function () {
+    var btn = this;
+    if (btn.classList.contains('loading')) return;
+    if (!await confirmModal('지금까지의 투표 기록을 모두 지울까요?\n(삼행시는 그대로 남아요)', '투표 기록 초기화', '초기화')) return;
+    try {
+      await Api.run(btn, async function () {
+        await t('tVoteReset');
+        msg($('vote-msg'), '✅ 투표 기록을 초기화했어요.', true);
+        if (!$('vote-result-wrap').classList.contains('hidden')) await loadVoteResults(); else await loadVote();
+      });
+    } catch (err) { msg($('vote-msg'), '😢 ' + err.message); }
+  });
 
   $('btn-csv').addEventListener('click', function () {
     var q = function (s) { return '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'; };

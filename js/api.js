@@ -29,8 +29,22 @@ window.Api = (function () {
   function auth(req) { if (req.password !== DEMO_PW) throw new Error('비밀번호가 맞지 않아요. (데모 비밀번호: 1234)'); }
   function latest(db) { var m = {}; db.poems.forEach(function (p) { m[p.id] = p; }); return m; }
 
+  /* 투표 (GAS 로직과 동일) */
+  function vcfg(db) { return db.vote || { open: false, picks: 3 }; }
+  function ballot(db) {
+    var l = latest(db), order = {}, out = [];
+    db.students.forEach(function (s, i) { order[s.id] = i; });
+    db.students.forEach(function (s) {
+      var p = l[s.id];
+      if (!p || !s.mId) return;
+      out.push({ key: s.mId, authorId: s.id, authorName: s.name, manitoName: s.mName, lines: p.lines, order: order[s.mId] });
+    });
+    return out.sort(function (a, b) { return a.order - b.order; });
+  }
+  function lastVotes(db) { var m = {}; (db.votes || []).forEach(function (v) { m[v.id] = v.keys; }); return m; }
+
   var demo = {
-    login: function (db, r) { var s = find(db, r); return { id: s.id, name: s.name, drawn: !!s.drawnAt }; },
+    login: function (db, r) { var s = find(db, r); return { id: s.id, name: s.name, drawn: !!s.drawnAt, vote: vcfg(db) }; },
     draw: function (db, r) {
       var s = find(db, r);
       if (!s.mName) throw new Error('아직 선생님이 마니또를 정하지 않았어요. 조금만 기다려 주세요!');
@@ -89,7 +103,57 @@ window.Api = (function () {
         return { id: s.id, name: s.name, manitoId: s.mId, manitoName: s.mName, drawnAt: s.drawnAt, lines: p ? p.lines : null, savedAt: p ? p.at : null, count: db.poems.filter(function (x) { return x.id === s.id; }).length };
       });
     },
-    tHistory: function (db, r) { auth(r); return db.poems.filter(function (p) { return p.id === String(r.id); }).reverse(); }
+    tHistory: function (db, r) { auth(r); return db.poems.filter(function (p) { return p.id === String(r.id); }).reverse(); },
+
+    voteStatus: function (db, r) { find(db, r); return vcfg(db); },
+    getBallot: function (db, r) {
+      var s = find(db, r), cfg = vcfg(db);
+      if (!cfg.open) throw new Error('아직 투표가 시작되지 않았어요.');
+      var items = ballot(db).filter(function (p) { return p.authorId !== s.id; }).map(function (p) { return { key: p.key, manitoName: p.manitoName, lines: p.lines }; });
+      return { picks: cfg.picks, items: items, selected: lastVotes(db)[s.id] || [] };
+    },
+    submitVote: function (db, r) {
+      var s = find(db, r), cfg = vcfg(db);
+      if (!cfg.open) throw new Error('투표가 마감되었어요.');
+      var keys = (r.keys || []).map(String);
+      if (new Set(keys).size !== keys.length) throw new Error('같은 삼행시를 두 번 고를 수 없어요.');
+      if (keys.length !== cfg.picks) throw new Error('삼행시를 정확히 ' + cfg.picks + '개 골라 주세요.');
+      var ok = {}; ballot(db).forEach(function (p) { if (p.authorId !== s.id) ok[p.key] = 1; });
+      keys.forEach(function (k) { if (!ok[k]) throw new Error('고를 수 없는 삼행시가 포함되어 있어요.'); });
+      db.votes = (db.votes || []).concat([{ at: now(), id: s.id, keys: keys }]);
+      save(db);
+      return { picks: cfg.picks };
+    },
+    tVoteGet: function (db, r) {
+      auth(r);
+      var c = vcfg(db);
+      return { open: c.open, picks: c.picks, voters: Object.keys(lastVotes(db)).length, students: db.students.length, poems: ballot(db).length };
+    },
+    tVoteSet: function (db, r) {
+      auth(r);
+      if (r.open) {
+        var picks = parseInt(r.picks, 10), total = ballot(db).length;
+        if (!picks || picks < 1) throw new Error('고를 개수는 1 이상이어야 해요.');
+        if (total < 2) throw new Error('저장된 삼행시가 2개 이상 있어야 투표를 시작할 수 있어요.');
+        if (picks > total - 1) throw new Error('고를 개수가 투표 대상(최대 ' + (total - 1) + '개)보다 많아요.');
+        db.vote = { open: true, picks: picks };
+      } else {
+        db.vote = { open: false, picks: vcfg(db).picks };
+      }
+      save(db);
+      return demo.tVoteGet(db, r);
+    },
+    tVoteResults: function (db, r) {
+      auth(r);
+      var counts = {}, votes = lastVotes(db);
+      Object.keys(votes).forEach(function (id) { votes[id].forEach(function (k) { counts[k] = (counts[k] || 0) + 1; }); });
+      var list = ballot(db).map(function (p) { return { manitoName: p.manitoName, authorName: p.authorName, lines: p.lines, votes: counts[p.key] || 0, order: p.order }; });
+      list.sort(function (a, b) { return b.votes - a.votes || a.order - b.order; });
+      var rank = 0, prev = null;
+      list.forEach(function (x, i) { if (x.votes !== prev) { rank = i + 1; prev = x.votes; } x.rank = rank; });
+      return { voters: Object.keys(votes).length, items: list };
+    },
+    tVoteReset: function (db, r) { auth(r); db.votes = []; save(db); return true; }
   };
 
   async function call(action, data) {

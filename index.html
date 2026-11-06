@@ -43,6 +43,7 @@
     <div class="menu-grid">
       <button id="btn-draw" class="btn coral" type="button"><span class="step-tag">STEP 1</span>내 마니또 뽑기 🎲<span class="sub" id="draw-sub">두근두근, 누구일까요?</span></button>
       <button id="btn-poem" class="btn mint" type="button" disabled><span class="step-tag">STEP 2</span>마니또 이름으로 삼행시 짓기 ✏️<span class="sub" id="poem-sub">먼저 마니또를 뽑아야 열려요</span></button>
+      <button id="btn-vote" class="btn sky" type="button" disabled><span class="step-tag">STEP 3</span>투표하기 🗳️<span class="sub" id="vote-sub">선생님이 투표를 시작하면 열려요</span></button>
     </div>
     <div id="menu-msg" class="msg hidden"></div>
   </section>
@@ -79,7 +80,25 @@
     </div>
     <button id="btn-save" class="btn coral" type="button">저장하기 💾</button>
     <div id="poem-msg" class="msg hidden"></div>
-    <button id="btn-poem-back" class="btn ghost" type="button">나가기</button>
+    <button id="btn-poem-back" class="btn ghost" type="button">돌아가기</button>
+  </section>
+
+  <!-- 5. 투표 -->
+  <section id="s-vote" class="card hidden">
+    <div class="poem-head">
+      <h2 class="poem-title">🗳️ 투표하기</h2>
+      <p class="poem-lead" id="vote-lead"></p>
+      <ul class="poem-notes">
+        <li>누가 쓴 삼행시인지는 비밀이에요. 내용만 보고 골라 주세요!</li>
+        <li>내가 쓴 삼행시는 목록에 나오지 않아요.</li>
+        <li>투표가 끝나기 전까지는 다시 골라서 제출할 수 있어요.</li>
+      </ul>
+    </div>
+    <div id="vote-list" class="vote-list"></div>
+    <div class="vote-bar"><span id="vote-count"></span></div>
+    <button id="btn-vote-submit" class="btn coral" type="button" disabled>투표 제출하기 ✅</button>
+    <div id="vote-msg2" class="msg hidden"></div>
+    <button id="btn-vote-back" class="btn ghost" type="button">돌아가기</button>
   </section></div>
 
 <script src="js/config.js"></script>

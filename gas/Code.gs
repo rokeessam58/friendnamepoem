@@ -12,7 +12,7 @@
  *
  * 시트는 처음 호출될 때 자동 생성됩니다.
  *   '학생명단' : 학번 | 이름 | 마니또학번 | 마니또이름 | 뽑은시각
- *   '삼행시'   : 저장시각 | 학번 | 이름 | 마니또이름 | 삼행시(JSON)   ← 저장할 때마다 한 줄씩 누적
+ *   '삼행시'   : 저장시각 | 학번 | 이름 | 마니또이름 | 삼행시   ← 저장할 때마다 한 줄씩 누적
  */
 
 var SHEET_STUDENTS = '학생명단';
@@ -57,9 +57,16 @@ var ACTIONS = {
   tShuffle: tShuffle_,
   tResetDraw: tResetDraw_,
   tResults: tResults_,
-  tHistory: tHistory_
+  tHistory: tHistory_,
+  voteStatus: voteStatus_,
+  getBallot: getBallot_,
+  submitVote: submitVote_,
+  tVoteGet: tVoteGet_,
+  tVoteSet: tVoteSet_,
+  tVoteResults: tVoteResults_,
+  tVoteReset: tVoteReset_
 };
-var WRITE_ACTIONS = { draw: 1, savePoem: 1, tSetStudents: 1, tShuffle: 1, tResetDraw: 1 };
+var WRITE_ACTIONS = { draw: 1, savePoem: 1, tSetStudents: 1, tShuffle: 1, tResetDraw: 1, submitVote: 1, tVoteSet: 1, tVoteReset: 1 };
 
 /* ---------- 학생 기능 ---------- */
 
@@ -68,7 +75,8 @@ function login_(req) {
   return {
     id: found.row[0],
     name: found.row[1],
-    drawn: !!found.row[4]
+    drawn: !!found.row[4],
+    vote: voteConfig_()
   };
 }
 
@@ -104,8 +112,121 @@ function savePoem_(req) {
   if (!Array.isArray(lines) || lines.length !== chars.length) throw new Error('삼행시 줄 수가 맞지 않아요.');
   lines = lines.map(function (s) { return String(s).slice(0, 200); });
   var at = now_();
-  poemSheet_().appendRow([at, row[0], row[1], row[3], JSON.stringify(lines)]);
+  poemSheet_().appendRow([at, row[0], row[1], row[3], formatPoem_(chars, lines)]);
   return { savedAt: at };
+}
+
+/* ---------- 투표 (학생) ---------- */
+
+// 투표 설정은 스크립트 속성에 보관: VOTE_OPEN('1'이면 진행 중), VOTE_PICKS(고를 개수)
+function voteConfig_() {
+  var p = PropertiesService.getScriptProperties();
+  return { open: p.getProperty('VOTE_OPEN') === '1', picks: parseInt(p.getProperty('VOTE_PICKS'), 10) || 3 };
+}
+
+function voteStatus_(req) {
+  findStudent_(req);
+  return voteConfig_();
+}
+
+// 투표 대상 삼행시 목록: 저장된 삼행시를 '삼행시 대상(마니또)'의 명단 순서대로. 작성자는 담지 않음.
+// key = 삼행시 대상(마니또)의 학번
+function ballotPoems_() {
+  var students = readStudents_();
+  var latest = latestPoems_();
+  var order = {};
+  students.forEach(function (s, i) { order[s[0]] = i; });
+  var list = [];
+  students.forEach(function (s) {
+    var p = latest[s[0]];
+    if (!p || !s[2]) return;
+    list.push({ key: s[2], authorId: s[0], authorName: s[1], manitoName: s[3], lines: p.lines, order: order[s[2]] });
+  });
+  list.sort(function (a, b) { return a.order - b.order; });
+  return list;
+}
+
+function getBallot_(req) {
+  var found = findStudent_(req);
+  var cfg = voteConfig_();
+  if (!cfg.open) throw new Error('아직 투표가 시작되지 않았어요.');
+  var items = ballotPoems_().filter(function (p) { return p.authorId !== found.row[0]; }) // 내 삼행시는 제외
+    .map(function (p) { return { key: p.key, manitoName: p.manitoName, lines: p.lines }; });
+  return { picks: cfg.picks, items: items, selected: latestVotes_()[found.row[0]] || [] };
+}
+
+function submitVote_(req) {
+  var found = findStudent_(req);
+  var cfg = voteConfig_();
+  if (!cfg.open) throw new Error('투표가 마감되었어요.');
+  var keys = (req.keys || []).map(String);
+  var uniq = {};
+  keys.forEach(function (k) { uniq[k] = 1; });
+  if (Object.keys(uniq).length !== keys.length) throw new Error('같은 삼행시를 두 번 고를 수 없어요.');
+  if (keys.length !== cfg.picks) throw new Error('삼행시를 정확히 ' + cfg.picks + '개 골라 주세요.');
+  var allowed = {};
+  ballotPoems_().forEach(function (p) { if (p.authorId !== found.row[0]) allowed[p.key] = 1; });
+  keys.forEach(function (k) { if (!allowed[k]) throw new Error('고를 수 없는 삼행시가 포함되어 있어요.'); });
+  voteSheet_().appendRow([now_(), found.row[0], found.row[1], keys.join(' / ')]);
+  return { picks: cfg.picks };
+}
+
+// 학번별 가장 최근 투표 { 학번: [key, ...] }
+function latestVotes_() {
+  var sh = voteSheet_();
+  var map = {};
+  if (sh.getLastRow() < 2) return map;
+  sh.getRange(2, 1, sh.getLastRow() - 1, 4).getValues().forEach(function (r) {
+    map[String(r[1]).trim()] = String(r[3]).split('/').map(function (x) { return x.trim(); }).filter(Boolean);
+  });
+  return map;
+}
+
+/* ---------- 투표 (교사) ---------- */
+
+function tVoteGet_(req) {
+  tAuth_(req);
+  var cfg = voteConfig_();
+  return { open: cfg.open, picks: cfg.picks, voters: Object.keys(latestVotes_()).length, students: readStudents_().length, poems: ballotPoems_().length };
+}
+
+// req.open(true/false), req.picks(시작할 때 고를 개수)
+function tVoteSet_(req) {
+  tAuth_(req);
+  var p = PropertiesService.getScriptProperties();
+  if (req.open) {
+    var picks = parseInt(req.picks, 10);
+    var total = ballotPoems_().length;
+    if (!picks || picks < 1) throw new Error('고를 개수는 1 이상이어야 해요.');
+    if (total < 2) throw new Error('저장된 삼행시가 2개 이상 있어야 투표를 시작할 수 있어요.');
+    if (picks > total - 1) throw new Error('고를 개수가 투표 대상(최대 ' + (total - 1) + '개)보다 많아요.');
+    p.setProperty('VOTE_PICKS', String(picks));
+    p.setProperty('VOTE_OPEN', '1');
+  } else {
+    p.setProperty('VOTE_OPEN', '');
+  }
+  return tVoteGet_(req);
+}
+
+function tVoteResults_(req) {
+  tAuth_(req);
+  var counts = {};
+  var votes = latestVotes_();
+  Object.keys(votes).forEach(function (id) { votes[id].forEach(function (k) { counts[k] = (counts[k] || 0) + 1; }); });
+  var list = ballotPoems_().map(function (p) {
+    return { manitoName: p.manitoName, authorName: p.authorName, lines: p.lines, votes: counts[p.key] || 0, order: p.order };
+  });
+  list.sort(function (a, b) { return b.votes - a.votes || a.order - b.order; });
+  var rank = 0, prev = null;
+  list.forEach(function (x, i) { if (x.votes !== prev) { rank = i + 1; prev = x.votes; } x.rank = rank; });
+  return { voters: Object.keys(votes).length, items: list };
+}
+
+function tVoteReset_(req) {
+  tAuth_(req);
+  var sh = voteSheet_();
+  if (sh.getLastRow() > 1) sh.deleteRows(2, sh.getLastRow() - 1);
+  return true;
 }
 
 /* ---------- 교사 기능 ---------- */
@@ -214,9 +335,25 @@ function readPoems_() {
   var sh = poemSheet_();
   if (sh.getLastRow() < 2) return [];
   return sh.getRange(2, 1, sh.getLastRow() - 1, 5).getValues().map(function (r) {
-    var lines = [];
-    try { lines = JSON.parse(r[4]); } catch (e) {}
+    var lines = parsePoem_(r[4]);
     return { at: fmt_(r[0]), id: String(r[1]).trim(), name: String(r[2]), manitoName: String(r[3]), lines: lines };
+  });
+}
+
+// 시트 저장 형식: 줄마다 "글자: 내용" (줄바꿈으로 구분)
+function formatPoem_(chars, lines) {
+  return lines.map(function (l, i) { return chars[i] + ': ' + l; }).join('\n');
+}
+
+// 위 형식을 줄 배열로 복원 (예전에 JSON 배열로 저장된 기록도 읽을 수 있게 함)
+function parsePoem_(cell) {
+  var t = String(cell || '');
+  if (t.charAt(0) === '[') {
+    try { var arr = JSON.parse(t); if (Array.isArray(arr)) return arr; } catch (e) {}
+  }
+  if (!t) return [];
+  return t.split('\n').map(function (line) {
+    return Array.from(line).slice(1).join('').replace(/^: ?/, '');
   });
 }
 
@@ -238,7 +375,11 @@ function studentSheet_() {
 }
 
 function poemSheet_() {
-  return sheet_(SHEET_POEMS, ['저장시각', '학번', '이름', '마니또이름', '삼행시(JSON)'], [2]);
+  return sheet_(SHEET_POEMS, ['저장시각', '학번', '이름', '마니또이름', '삼행시'], [2]);
+}
+
+function voteSheet_() {
+  return sheet_('투표', ['투표시각', '학번', '이름', '고른 삼행시(대상 학번)'], [2, 4]);
 }
 
 function sheet_(name, header, textCols) {
