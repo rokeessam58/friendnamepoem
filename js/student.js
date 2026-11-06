@@ -18,6 +18,14 @@
   if (Api.isDemo) $('demo-note').classList.remove('hidden');
 
   /* ----- 로그인 ----- */
+  // 인증코드 칸: 영문 대문자만 입력되게 (한글·숫자·기호·공백은 바로 지워짐)
+  function onlyUpper() {
+    var v = this.value.replace(/[^A-Za-z]/g, '').toUpperCase();
+    if (v !== this.value) this.value = v;
+  }
+  $('in-code').addEventListener('input', onlyUpper);
+  $('in-code').addEventListener('compositionend', onlyUpper);
+
   $('login-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     var btn = e.target.querySelector('button');
