@@ -19,12 +19,33 @@
 
   /* ----- 로그인 ----- */
   // 인증코드 칸: 영문 대문자만 입력되게 (한글·숫자·기호·공백은 바로 지워짐)
+  // 한글 등 다른 입력기 상태이거나 영문이 아닌 글자를 치면 말풍선으로 한/영 키 확인을 안내
+  var tipTimer = null;
+  function showCodeTip() {
+    var tip = $('code-tip');
+    tip.classList.add('show');
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(function () { tip.classList.remove('show'); }, 3000);
+  }
   function onlyUpper() {
     var v = this.value.replace(/[^A-Za-z]/g, '').toUpperCase();
     if (v !== this.value) this.value = v;
   }
-  $('in-code').addEventListener('input', onlyUpper);
-  $('in-code').addEventListener('compositionend', onlyUpper);
+  var codeInput = $('in-code');
+  codeInput.addEventListener('keydown', function (e) {
+    if (e.isComposing || e.key === 'Process' || e.key === 'HangulMode') showCodeTip(); // 한글 등 입력기 사용 중
+  });
+  codeInput.addEventListener('compositionstart', showCodeTip);
+  // 영문이 아닌 글자는 조합 중이라도 바로 지우고 말풍선을 띄움
+  function purge() {
+    var before = this.value;
+    onlyUpper.call(this);
+    if (this.value.toUpperCase() !== before.toUpperCase()) showCodeTip();
+  }
+  codeInput.addEventListener('input', purge);
+  codeInput.addEventListener('compositionupdate', function () { var el = this; setTimeout(function () { purge.call(el); }, 0); });
+  codeInput.addEventListener('compositionend', purge);
+  codeInput.addEventListener('blur', function () { $('code-tip').classList.remove('show'); });
 
   $('login-form').addEventListener('submit', async function (e) {
     e.preventDefault();

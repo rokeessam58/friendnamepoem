@@ -29,7 +29,10 @@
       <label for="in-name">이름</label>
       <input id="in-name" type="text" placeholder="예) 홍길동" required>
       <label for="in-code">인증코드</label>
-      <input id="in-code" type="text" class="code-input" placeholder="영문 대문자 5글자" maxlength="5" autocomplete="off" inputmode="latin" pattern="[A-Z]{5}" title="영문 대문자 5글자" autocapitalize="characters" spellcheck="false" required>
+      <div class="code-wrap">
+        <input id="in-code" type="text" class="code-input" placeholder="영문 대문자 5글자" maxlength="5" autocomplete="off" inputmode="latin" pattern="[A-Z]{5}" title="영문 대문자 5글자" autocapitalize="characters" spellcheck="false" required>
+        <div id="code-tip" class="code-tip" role="status" aria-live="polite">⌨️ 영어로 입력해 주세요! <b>한/영 키</b>를 확인해 주세요.</div>
+      </div>
       <button class="btn coral" type="submit">들어가기</button>
       <div id="login-msg" class="msg hidden"></div>
     </form>

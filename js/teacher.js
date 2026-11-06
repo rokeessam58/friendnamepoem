@@ -4,6 +4,13 @@
   var rows = [];
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  // 삼행시 표시: 줄마다 "홍: 내용". 줄이 길어 넘어가면 둘째 줄부터도 내용 첫 글자에 맞춰 정렬
+  function poemHtml(manito, lines) {
+    var chars = Array.from(manito || '');
+    return lines.map(function (l, i) {
+      return '<div class="pl"><span class="pl-c">' + esc(chars[i] || Array.from(String(l))[0] || '') + ':</span><span class="pl-t">' + esc(l) + '</span></div>';
+    }).join('');
+  }
   function msg(el, text, ok) { el.textContent = text || ''; el.classList.toggle('hidden', !text); el.classList.toggle('ok', !!ok); }
   function t(action, data) { return Api.call(action, Object.assign({ password: pw }, data || {})); }
 
@@ -197,7 +204,7 @@
       return '<tr><td>' + esc(r.id) + '</td><td>' + esc(r.name) + '</td><td>🎁</td><td><b>' + esc(r.manitoName || '아직 셔플 전') + '</b></td></tr>';
     }).join('') || '<tr><td colspan="4">등록된 학생이 없어요.</td></tr>';
     $('result-body').innerHTML = rows.map(function (r, i) {
-      var poem = r.lines ? r.lines.map(function (l) { return esc(l); }).join('<br>') : '<span class="tag n">아직 없음</span>';
+      var poem = r.lines ? poemHtml(r.manitoName, r.lines) : '<span class="tag n">아직 없음</span>';
       return '<tr><td>' + esc(r.id) + '</td><td>' + esc(r.name) + '</td><td>' + (r.manitoName ? esc(r.manitoName) : '-') + '</td>' +
         '<td>' + (r.drawnAt ? '<span class="tag y">완료</span>' : '<span class="tag n">대기</span>') + '</td>' +
         '<td class="poem">' + poem + '</td><td>' + esc(Api.fmt(r.savedAt) || '-') + (r.count > 1 ? ' <small>(' + r.count + '회)</small>' : '') + '</td>' +
@@ -214,7 +221,7 @@
       if (!list) return;
       $('modal-title').textContent = r.name + ' → ' + r.manitoName + ' 저장 기록';
       $('modal-body').innerHTML = list.map(function (h, i) {
-        return '<div class="hist"><small>' + esc(Api.fmt(h.at)) + (i === 0 ? ' · 최신' : '') + '</small>' + h.lines.map(esc).join('<br>') + '</div>';
+        return '<div class="hist"><small>' + esc(Api.fmt(h.at)) + (i === 0 ? ' · 최신' : '') + '</small>' + poemHtml(h.manitoName, h.lines) + '</div>';
       }).join('');
       $('modal').classList.remove('hidden');
     } catch (err) { msg($('result-msg'), '😢 ' + err.message); }

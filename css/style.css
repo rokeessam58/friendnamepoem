@@ -246,3 +246,16 @@ button.tag { font-family: inherit; color: inherit; line-height: inherit; cursor:
 .pd-row .pd-lines { margin: 4px 0; }
 .pd-pop { animation: pd-pop .6s cubic-bezier(.2, 1.4, .4, 1); }
 @keyframes pd-pop { from { transform: scale(.4) translateY(30px); opacity: 0 } to { transform: none; opacity: 1 } }
+
+/* 인증코드 입력 안내 말풍선 */
+.code-wrap { position: relative; }
+.code-tip { position: absolute; left: 8px; top: calc(100% + 10px); z-index: 5; background: var(--ink); color: #fff; font-size: 14px; line-height: 1.4; padding: 8px 12px; border-radius: 12px; box-shadow: 3px 3px 0 rgba(59,47,47,.25); opacity: 0; transform: translateY(-6px); pointer-events: none; transition: opacity .18s, transform .18s; max-width: calc(100% - 16px); }
+.code-tip b { color: var(--yellow); }
+.code-tip::after { content: ''; position: absolute; left: 22px; bottom: 100%; border: 8px solid transparent; border-bottom-color: var(--ink); }
+.code-tip.show { opacity: 1; transform: none; }
+
+/* 삼행시 줄: '홍: 내용' — 줄바꿈되어도 내용 첫 글자에 맞춰 정렬 */
+.pl { display: flex; gap: .4em; align-items: baseline; text-align: left; }
+.pl + .pl { margin-top: 2px; }
+.pl-c { flex: none; white-space: nowrap; font-weight: 700; }
+.pl-t { min-width: 0; word-break: keep-all; overflow-wrap: anywhere; }
