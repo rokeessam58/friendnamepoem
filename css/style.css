@@ -42,7 +42,8 @@ body {
 .banner { text-align: center; padding: 18px 0 8px; }
 .banner .badge {
   display: inline-block; background: var(--yellow); border: 3px solid var(--line); border-radius: 999px;
-  padding: 4px 16px; font-family: var(--f-title); font-weight: 700; font-size: 15px; box-shadow: 3px 3px 0 var(--line);
+  padding: 7px 16px 1px; /* 이모지 때문에 줄이 높아져 글자가 위로 쏠려서 실측(위 6.8px/아래 13.1px)에 맞춰 보정 */
+  font-family: var(--f-title); font-weight: 700; font-size: 15px; box-shadow: 3px 3px 0 var(--line);
   transform: rotate(-2deg);
 }
 .banner h1 { font-family: var(--f-big); font-weight: 700; font-size: clamp(34px, 9vw, 54px); margin: 10px 0 4px; line-height: 1.15; color: var(--coral); text-shadow: 3px 3px 0 var(--line); -webkit-text-stroke: 1.5px var(--line); letter-spacing: 1px; }
