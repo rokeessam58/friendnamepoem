@@ -179,6 +179,11 @@ table { border-collapse: collapse; width: 100%; font-size: 15px; table-layout: f
 .t-shuffle { min-width: 420px; }
 .t-results { min-width: 760px; }
 .t-vote { min-width: 600px; }
+.t-codes { min-width: 360px; }
+#tab-roster .t-codes th, #tab-roster .t-codes td { text-align: center; }
+.code-chip { display: inline-block; font-family: var(--f-big); font-weight: 700; font-size: 22px; letter-spacing: 4px; padding: 0 10px; background: #fff6e3; border: 2px solid var(--line); border-radius: 10px; }
+.code-input { text-transform: uppercase; letter-spacing: 6px; font-family: var(--f-big); font-weight: 700; font-size: 22px; }
+.code-input::placeholder { letter-spacing: 0; text-transform: none; font-family: inherit; font-size: 16px; font-weight: 400; }
 #tab-vote th, #tab-vote td { text-align: center; }
 #tab-vote td.poem { text-align: left; }
 th, td { padding: 8px 10px; border-bottom: 2px solid #eee3cc; text-align: left; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }

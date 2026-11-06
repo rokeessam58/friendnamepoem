@@ -52,6 +52,20 @@
         <button id="btn-roster-save" class="btn mint" type="button">명단 저장하기</button>
       </div>
       <div id="roster-msg" class="msg hidden"></div>
+
+      <h2 style="margin-top:28px">🔑 학생별 인증코드</h2>
+      <p class="small-help">학생이 로그인할 때 학번·이름과 함께 입력하는 영문 대문자 5글자예요. 구글 시트 <b>학생명단</b>의 '인증코드' 열에서도 관리돼요.<br>
+      명단을 다시 저장해도 같은 학번의 코드는 유지돼요.</p>
+      <div class="row-btns">
+        <button id="btn-codes-copy" class="btn mint" type="button">📋 코드 표 복사</button>
+        <button id="btn-codes-regen" class="btn ghost" type="button">🔄 전체 재발급</button>
+      </div>
+      <div id="codes-msg" class="msg hidden"></div>
+      <div class="table-wrap"><table class="t-codes">
+        <colgroup><col style="width:30%"><col style="width:30%"><col style="width:40%"></colgroup>
+        <thead><tr><th>학번</th><th>이름</th><th>인증코드</th></tr></thead>
+        <tbody id="codes-body"></tbody>
+      </table></div>
     </div>
 
     <div id="tab-shuffle" class="card hidden">

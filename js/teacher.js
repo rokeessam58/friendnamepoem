@@ -45,6 +45,7 @@
     $('t-login').classList.add('hidden');
     $('t-main').classList.remove('hidden');
     loadRoster();
+    loadCodes();
     loadResults();
   }
   $('t-form').addEventListener('submit', async function (e) {
@@ -89,6 +90,37 @@
     } catch (err) { msg($('roster-msg'), '😢 ' + err.message); }
     ta.disabled = false; ta.placeholder = ph;
   }
+  /* ----- 인증코드 ----- */
+  var codes = [];
+  async function loadCodes() {
+    $('codes-body').innerHTML = '<tr><td colspan="3">불러오는 중…</td></tr>';
+    try { codes = await t('tCodes'); renderCodes(); }
+    catch (err) { $('codes-body').innerHTML = ''; msg($('codes-msg'), '😢 ' + err.message); }
+  }
+  function renderCodes() {
+    msg($('codes-msg'), '');
+    $('codes-body').innerHTML = codes.map(function (c) {
+      return '<tr><td>' + esc(c[0]) + '</td><td>' + esc(c[1]) + '</td><td><span class="code-chip">' + esc(c[2]) + '</span></td></tr>';
+    }).join('') || '<tr><td colspan="3">등록된 학생이 없어요.</td></tr>';
+  }
+  $('btn-codes-copy').addEventListener('click', async function () {
+    var text = codes.map(function (c) { return c.join('\t'); }).join('\n');
+    try { await navigator.clipboard.writeText(text); msg($('codes-msg'), '✅ 복사했어요. 엑셀/시트에 붙여넣을 수 있어요.', true); }
+    catch (e) { msg($('codes-msg'), '😢 복사하지 못했어요. 표를 직접 드래그해서 복사해 주세요.'); }
+  });
+  $('btn-codes-regen').addEventListener('click', async function () {
+    var btn = this;
+    if (btn.classList.contains('loading')) return;
+    if (!await confirmModal('모든 학생의 인증코드를 새로 만들까요?\n이미 나눠준 코드는 쓸 수 없게 돼요.', '인증코드 재발급', '재발급')) return;
+    try {
+      await Api.run(btn, async function () {
+        codes = await t('tRegenCodes');
+        renderCodes();
+        msg($('codes-msg'), '✅ 새 인증코드를 만들었어요.', true);
+      });
+    } catch (err) { msg($('codes-msg'), '😢 ' + err.message); }
+  });
+
   $('btn-sample').addEventListener('click', function () {
     var names = ['김민준', '이서연', '박지호', '최수아', '정하준', '강지우', '조예준', '윤서윤', '장도윤', '임하은'];
     $('roster-text').value = names.map(function (n, i) { return (10101 + i) + ' ' + n; }).join('\n');
@@ -109,6 +141,7 @@
       await Api.run(btn, async function () {
         var n = await t('tSetStudents', { students: students });
         msg($('roster-msg'), '✅ ' + n + '명 저장했어요. 이제 [② 마니또 셔플]을 해 주세요.', true);
+        await loadCodes();
         await loadResults();
       });
     } catch (err) { msg($('roster-msg'), '😢 ' + err.message); }

@@ -23,8 +23,16 @@ window.Api = (function () {
   function clean(s) { return String(s || '').replace(/\s+/g, ''); }
   function find(db, req) {
     var s = db.students.find(function (x) { return x.id === String(req.id || '').trim() && clean(x.name) === clean(req.name); });
-    if (!s) throw new Error('학번과 이름이 명단과 맞지 않아요. 다시 확인해 주세요.');
+    if (!s) throw new Error('학번, 이름, 인증코드가 명단과 맞지 않아요. 다시 확인해 주세요.');
+    if (!s.code) throw new Error('아직 인증코드가 만들어지지 않았어요. 선생님께 알려 주세요.');
+    if (clean(req.code).toUpperCase() !== s.code) throw new Error('인증코드가 맞지 않아요. 다시 확인해 주세요.');
     return s;
+  }
+  function newCode(used) {
+    var A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', c;
+    do { c = ''; for (var i = 0; i < 5; i++) c += A.charAt(Math.floor(Math.random() * 26)); } while (used[c]);
+    used[c] = 1;
+    return c;
   }
   function auth(req) { if (req.password !== DEMO_PW) throw new Error('비밀번호가 맞지 않아요. (데모 비밀번호: 1234)'); }
   function latest(db) { var m = {}; db.poems.forEach(function (p) { m[p.id] = p; }); return m; }
@@ -70,16 +78,32 @@ window.Api = (function () {
     tGetStudents: function (db, r) { auth(r); return db.students.map(function (s) { return [s.id, s.name]; }); },
     tSetStudents: function (db, r) {
       auth(r);
-      var seen = {};
+      var seen = {}, old = {}, used = {};
+      db.students.forEach(function (s) { if (s.code) { old[s.id] = s.code; used[s.code] = 1; } });
       db.students = r.students.map(function (x) {
         var id = String(x[0]).trim(), name = clean(x[1]);
         if (!id || !name) throw new Error('학번/이름이 비어 있는 줄이 있어요.');
         if (seen[id]) throw new Error('학번이 중복되었어요: ' + id);
         seen[id] = true;
-        return { id: id, name: name, mId: '', mName: '', drawnAt: '' };
+        return { id: id, name: name, mId: '', mName: '', drawnAt: '', code: old[id] || newCode(used) };
       });
       save(db);
       return db.students.length;
+    },
+    tCodes: function (db, r) {
+      auth(r);
+      var used = {};
+      db.students.forEach(function (s) { if (s.code) used[s.code] = 1; });
+      db.students.forEach(function (s) { if (!s.code) s.code = newCode(used); });
+      save(db);
+      return db.students.map(function (s) { return [s.id, s.name, s.code]; });
+    },
+    tRegenCodes: function (db, r) {
+      auth(r);
+      var used = {};
+      db.students.forEach(function (s) { s.code = newCode(used); });
+      save(db);
+      return db.students.map(function (s) { return [s.id, s.name, s.code]; });
     },
     tShuffle: function (db, r) {
       auth(r);

@@ -24,9 +24,11 @@
     msg($('login-msg'), '');
     try {
       await Api.run(btn, async function () {
-        var r = await Api.call('login', { id: $('in-id').value.trim(), name: $('in-name').value.trim() });
+        var cred = { id: $('in-id').value.trim(), name: $('in-name').value.trim(), code: $('in-code').value.trim().toUpperCase() };
+        var r = await Api.call('login', cred);
         user = r;
-        try { sessionStorage.setItem('manito_user', JSON.stringify({ id: r.id, name: r.name })); } catch (e2) {}
+        user.code = cred.code;
+        try { sessionStorage.setItem('manito_user', JSON.stringify({ id: r.id, name: r.name, code: cred.code })); } catch (e2) {}
         enterMenu();
       });
     } catch (err) {
@@ -57,6 +59,7 @@
     show('s-boot'); // 확인하는 동안 로그인 폼이 깜빡이지 않도록 로딩 화면 표시
     try {
       user = await Api.call('login', saved);
+      user.code = saved.code;
       enterMenu();
     } catch (e) {
       try { sessionStorage.removeItem('manito_user'); } catch (e2) {}
@@ -97,7 +100,7 @@
   setInterval(async function () {
     if (!user || $('s-menu').classList.contains('hidden')) return;
     try {
-      user.vote = await Api.call('voteStatus', { id: user.id, name: user.name });
+      user.vote = await Api.call('voteStatus', { id: user.id, name: user.name, code: user.code });
       if (!$('s-menu').classList.contains('hidden')) refreshMenu();
     } catch (e) {}
   }, 15000);
@@ -108,7 +111,7 @@
     var res;
     try {
       // 서버 응답을 받는 동안 버튼에 로딩 표시 → 받은 뒤에 뽑기 화면으로 전환
-      res = await Api.run(this, function () { return Api.call('draw', { id: user.id, name: user.name }); });
+      res = await Api.run(this, function () { return Api.call('draw', { id: user.id, name: user.name, code: user.code }); });
     } catch (err) {
       msg($('menu-msg'), '😢 ' + err.message);
       return;
@@ -169,7 +172,7 @@
     msg($('menu-msg'), '');
     try {
       await Api.run(e.currentTarget, async function () {
-        var r = await Api.call('getPoem', { id: user.id, name: user.name });
+        var r = await Api.call('getPoem', { id: user.id, name: user.name, code: user.code });
         manito = r.manitoName;
         buildBoard(Array.from(manito), r.lines);
         $('save-info').textContent = r.savedAt ? '마지막 저장: ' + Api.fmt(r.savedAt) : '';
@@ -215,7 +218,7 @@
     msg($('poem-msg'), '');
     try {
       await Api.run(btn, async function () {
-        var r = await Api.call('savePoem', { id: user.id, name: user.name, lines: lines });
+        var r = await Api.call('savePoem', { id: user.id, name: user.name, code: user.code, lines: lines });
         $('save-info').textContent = '마지막 저장: ' + Api.fmt(r.savedAt);
         msg($('poem-msg'), '🎉 저장했어요! 언제든 다시 고칠 수 있어요.', true);
       });
@@ -234,7 +237,7 @@
     msg($('menu-msg'), '');
     try {
       await Api.run(this, async function () {
-        var r = await Api.call('getBallot', { id: user.id, name: user.name });
+        var r = await Api.call('getBallot', { id: user.id, name: user.name, code: user.code });
         picksNeeded = r.picks;
         picked = r.selected.filter(function (k) { return r.items.some(function (x) { return x.key === k; }); });
         buildVote(r.items);
@@ -245,7 +248,7 @@
       });
     } catch (err) {
       msg($('menu-msg'), '😢 ' + err.message);
-      try { user.vote = await Api.call('voteStatus', { id: user.id, name: user.name }); } catch (e) {}
+      try { user.vote = await Api.call('voteStatus', { id: user.id, name: user.name, code: user.code }); } catch (e) {}
       refreshMenu();
     }
   });
@@ -283,7 +286,7 @@
     msg($('vote-msg2'), '');
     try {
       await Api.run(this, async function () {
-        await Api.call('submitVote', { id: user.id, name: user.name, keys: picked });
+        await Api.call('submitVote', { id: user.id, name: user.name, code: user.code, keys: picked });
         msg($('vote-msg2'), '🎉 투표했어요! 투표가 끝나기 전까지는 다시 고칠 수 있어요.', true);
       });
     } catch (err) {

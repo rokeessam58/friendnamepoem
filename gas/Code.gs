@@ -11,7 +11,7 @@
  * 4) 코드를 고치면 [배포 관리 > 수정 > 새 버전] 으로 다시 배포해야 반영됩니다.
  *
  * 시트는 처음 호출될 때 자동 생성됩니다.
- *   '학생명단' : 학번 | 이름 | 마니또학번 | 마니또이름 | 뽑은시각
+ *   '학생명단' : 학번 | 이름 | 마니또학번 | 마니또이름 | 뽑은시각 | 인증코드(영문 대문자 5글자)
  *   '삼행시'   : 저장시각 | 학번 | 이름 | 마니또이름 | 삼행시   ← 저장할 때마다 한 줄씩 누적
  */
 
@@ -58,6 +58,8 @@ var ACTIONS = {
   tResetDraw: tResetDraw_,
   tResults: tResults_,
   tHistory: tHistory_,
+  tCodes: tCodes_,
+  tRegenCodes: tRegenCodes_,
   voteStatus: voteStatus_,
   getBallot: getBallot_,
   submitVote: submitVote_,
@@ -66,7 +68,7 @@ var ACTIONS = {
   tVoteResults: tVoteResults_,
   tVoteReset: tVoteReset_
 };
-var WRITE_ACTIONS = { draw: 1, savePoem: 1, tSetStudents: 1, tShuffle: 1, tResetDraw: 1, submitVote: 1, tVoteSet: 1, tVoteReset: 1 };
+var WRITE_ACTIONS = { draw: 1, savePoem: 1, tSetStudents: 1, tShuffle: 1, tResetDraw: 1, submitVote: 1, tVoteSet: 1, tVoteReset: 1, tCodes: 1, tRegenCodes: 1 };
 
 /* ---------- 학생 기능 ---------- */
 
@@ -247,21 +249,61 @@ function tGetStudents_(req) {
   return readStudents_().map(function (r) { return [r[0], r[1]]; });
 }
 
+// 인증코드 목록 [[학번, 이름, 코드]]. 코드가 비어 있는 학생이 있으면 이때 채워 넣음
+function tCodes_(req) {
+  tAuth_(req);
+  var sh = studentSheet_();
+  var rows = readStudents_();
+  var used = {};
+  rows.forEach(function (r) { if (r[5]) used[r[5]] = 1; });
+  rows.forEach(function (r, i) {
+    if (!r[5]) { r[5] = newCode_(used); sh.getRange(i + 2, 6).setValue(r[5]); }
+  });
+  return rows.map(function (r) { return [r[0], r[1], r[5]]; });
+}
+
+// 전체 인증코드 재발급
+function tRegenCodes_(req) {
+  tAuth_(req);
+  var sh = studentSheet_();
+  var n = readStudents_().length;
+  var used = {};
+  var codes = [];
+  for (var i = 0; i < n; i++) codes.push([newCode_(used)]);
+  if (n) sh.getRange(2, 6, n, 1).setValues(codes);
+  return tCodes_(req);
+}
+
+// 무작위 영문 대문자 5글자 (중복 없이)
+function newCode_(used) {
+  var A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', c;
+  do {
+    c = '';
+    for (var i = 0; i < 5; i++) c += A.charAt(Math.floor(Math.random() * 26));
+  } while (used[c]);
+  used[c] = 1;
+  return c;
+}
+
 // req.students = [[학번, 이름], ...]  (기존 명단을 통째로 교체. 마니또 배정/뽑기 기록은 초기화)
 function tSetStudents_(req) {
   tAuth_(req);
   var seen = {};
+  var oldCodes = {}; // 같은 학번은 기존 인증코드를 그대로 유지
+  readStudents_().forEach(function (r) { if (r[5]) oldCodes[r[0]] = r[5]; });
+  var used = {};
+  Object.keys(oldCodes).forEach(function (k) { used[oldCodes[k]] = 1; });
   var rows = (req.students || []).map(function (s) {
     var id = String(s[0]).trim();
     var name = clean_(s[1]);
     if (!id || !name) throw new Error('학번/이름이 비어 있는 줄이 있어요.');
     if (seen[id]) throw new Error('학번이 중복되었어요: ' + id);
     seen[id] = true;
-    return [id, name, '', '', ''];
+    return [id, name, '', '', '', oldCodes[id] || newCode_(used)];
   });
   var sh = studentSheet_();
-  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, 5).clearContent();
-  if (rows.length) sh.getRange(2, 1, rows.length, 5).setValues(rows);
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, 6).clearContent();
+  if (rows.length) sh.getRange(2, 1, rows.length, 6).setValues(rows);
   return rows.length;
 }
 
@@ -317,17 +359,19 @@ function findStudent_(req) {
   var rows = readStudents_();
   for (var i = 0; i < rows.length; i++) {
     if (rows[i][0] === id && clean_(rows[i][1]) === name) {
+      if (!rows[i][5]) throw new Error('아직 인증코드가 만들어지지 않았어요. 선생님께 알려 주세요.');
+      if (clean_(req.code).toUpperCase() !== rows[i][5]) throw new Error('인증코드가 맞지 않아요. 다시 확인해 주세요.');
       return { sheet: studentSheet_(), index: i, row: rows[i] };
     }
   }
-  throw new Error('학번과 이름이 명단과 맞지 않아요. 다시 확인해 주세요.');
+  throw new Error('학번, 이름, 인증코드가 명단과 맞지 않아요. 다시 확인해 주세요.');
 }
 
 function readStudents_() {
   var sh = studentSheet_();
   if (sh.getLastRow() < 2) return [];
-  return sh.getRange(2, 1, sh.getLastRow() - 1, 5).getValues().map(function (r) {
-    return [String(r[0]).trim(), String(r[1]).trim(), String(r[2]).trim(), String(r[3]).trim(), r[4] ? String(r[4]) : ''];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, 6).getValues().map(function (r) {
+    return [String(r[0]).trim(), String(r[1]).trim(), String(r[2]).trim(), String(r[3]).trim(), r[4] ? String(r[4]) : '', String(r[5] || '').trim().toUpperCase()];
   });
 }
 
@@ -371,7 +415,12 @@ function poemCounts_() {
 }
 
 function studentSheet_() {
-  return sheet_(SHEET_STUDENTS, ['학번', '이름', '마니또학번', '마니또이름', '뽑은시각'], [1, 3]);
+  var sh = sheet_(SHEET_STUDENTS, ['학번', '이름', '마니또학번', '마니또이름', '뽑은시각', '인증코드'], [1, 3, 6]);
+  if (sh.getRange(1, 6).getValue() !== '인증코드') { // 예전에 만든 시트에는 인증코드 열을 덧붙임
+    sh.getRange(1, 6).setValue('인증코드').setFontWeight('bold').setBackground('#ffe9a8');
+    sh.getRange(2, 6, sh.getMaxRows() - 1, 1).setNumberFormat('@');
+  }
+  return sh;
 }
 
 function poemSheet_() {
