@@ -109,7 +109,7 @@ textarea { min-height: 220px; font-size: 16px; resize: vertical; }
 
 /* 메뉴 */
 .menu-grid { display: grid; gap: 6px; }
-.step-tag { display: inline-block; margin-bottom: 8px; background: var(--ink); color: #fff; border-radius: 999px; padding: 1px 10px; font-size: 12px; margin-right: 0; vertical-align: middle; }
+.step-tag { display: inline-block; margin-bottom: 8px; background: var(--ink); color: #fff; border-radius: 999px; padding: 3px 10px 0; /* 폰트가 위로 쏠려 보여 실측(위 1px/아래 4px)에 맞춰 보정 */ font-size: 12px; margin-right: 0; vertical-align: middle; }
 
 /* 뽑기 결과 */
 .reveal { text-align: center; }
